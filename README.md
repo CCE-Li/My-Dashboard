@@ -156,6 +156,14 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
 推送到 `main` 即触发 `.github/workflows/deploy.yml`：type-check → test → build → 发布
 到 GitHub Pages（`base: './'` 适配子路径）。
 
+> ⚠️ **必须先把这个仓库的 Pages Source 设为 "GitHub Actions"**
+> （Settings → Pages → Build and deployment → Source）。
+> 如果设成 "Deploy from a branch"，GitHub 会直接服务**仓库根目录**：浏览器会去请求
+> 源码入口 `/src/main.ts`（404），页面**全白且没有任何报错**。
+> 判断方法：访问 `…/My-Dashboard/src/main.ts`，返回 200 就说明配置错了。
+> 改完 Source 后到 Actions 页重跑一次 workflow（`workflow_dispatch` 已开启，可直接
+> 点 "Run workflow"，不需要新提交）。
+
 站点地址形如 `https://cce-li.github.io/My-Dashboard/`。若要与 BRZ-Fund 共享
 IndexedDB，两者必须部署在**同一 GitHub 账号的 Pages 下**（同一 origin）。
 
