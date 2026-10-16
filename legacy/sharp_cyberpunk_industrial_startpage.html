@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYS://RAW_INDUSTRIAL_STARTPAGE</title>
+    <!-- Tailwind CSS (仅使用布局与响应式，样式由全自定义硬核 CSS 控制) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+        
+        * {
+            border-radius: 0px !important; /* 绝对零圆角：严格遵守直角锋利风格 */
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            background-color: #050505;
+            color: #d1d5db;
+            letter-spacing: -0.02em;
+        }
+
+        /* 锋利工业风卡片 */
+        .sharp-card {
+            background-color: #0a0a0a;
+            border: 1px solid #222222;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .sharp-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+        }
+
+        /* 拖拽状态视觉 */
+        .draggable-tile {
+            cursor: default;
+        }
+        .draggable-tile.dragging {
+            opacity: 0.3;
+            border: 1px dashed #00ff88;
+        }
+        .drag-over {
+            border-color: #00ff88 !important;
+            background-color: #0f1710 !important;
+        }
+
+        /* 抓手按钮 */
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        /* 极客输入框与按钮 */
+        .sharp-input {
+            background: #030303;
+            border: 1px solid #333333;
+            color: #ffffff;
+            outline: none;
+        }
+        .sharp-input:focus {
+            border-color: #00ff88;
+            background: #080808;
+        }
+
+        .sharp-btn {
+            background: #111111;
+            border: 1px solid #333333;
+            color: #e5e5e5;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: 600;
+            transition: all 0.1s ease;
+        }
+        .sharp-btn:hover {
+            background: #00ff88;
+            border-color: #00ff88;
+            color: #000000;
+        }
+        .sharp-btn-pink:hover {
+            background: #ff6699;
+            border-color: #ff6699;
+            color: #000000;
+        }
+
+        /* 像素/线条进度条 */
+        .pixel-bar {
+            background-color: #141414;
+            height: 10px;
+            border: 1px solid #262626;
+            position: relative;
+            overflow: hidden;
+        }
+        .pixel-bar-fill {
+            height: 100%;
+            background-color: #00ff88;
+            transition: width 0.3s ease;
+        }
+
+        /* 自定义窄滚动条 */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #222222; }
+        ::-webkit-scrollbar-thumb:hover { background: #00ff88; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 selection:bg-emerald-400 selection:text-black">
+
+    <!-- 顶部状态栏 -->
+    <header class="w-full max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#222] pb-4 mb-6 gap-2 text-xs">
+        <div class="flex items-center space-x-3">
+            <span class="bg-[#00ff88] text-black px-1.5 py-0.5 font-bold">[SYS.RAW]</span>
+            <span class="text-white font-bold tracking-widest">GRID_STARTPAGE // DRAGGABLE_TILES_v4.2</span>
+        </div>
+        <div class="flex items-center space-x-4 text-zinc-500 font-mono">
+            <span>MODE: <span class="text-emerald-400">EDITABLE_GRID</span></span>
+            <button onclick="resetTileOrder()" class="text-xs text-zinc-400 hover:text-emerald-400 underline">[RESET_LAYOUT]</button>
+            <span id="sys-clock" class="text-white bg-[#111] px-2 py-1 border border-[#333]">00:00:00 UTC</span>
+        </div>
+    </header>
+
+    <!-- 磁贴拖拽网格容器 -->
+    <main id="tiles-grid" class="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-grow">
+
+        <!-- 磁贴 1: BEWLYCAT B站搜索 (span-full) -->
+        <div class="sharp-card p-5 draggable-tile border-l-2 border-l-[#ff6699] col-span-1 md:col-span-2 lg:col-span-3" draggable="true" data-id="search">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#1c1c1c]">
+                <div class="flex items-center space-x-2 text-xs text-[#ff6699]">
+                    <span class="drag-handle text-zinc-500 hover:text-white px-1 font-bold" title="拖动调整顺序">::</span>
+                    <span>&gt;_</span>
+                    <span class="font-bold uppercase tracking-wider">BEWLYCAT_BILIBILI_SEARCH_GATEWAY</span>
+                </div>
+                <span class="text-[10px] text-zinc-600 uppercase font-mono">[ENDPOINT: SEARCH.BILIBILI.COM]</span>
+            </div>
+            
+            <form action="https://search.bilibili.com/all" method="get" target="_blank" class="flex flex-col sm:flex-row gap-2">
+                <div class="relative flex-grow">
+                    <input type="text" name="keyword" placeholder="ENTER SEARCH KEYWORD..." autofocus
+                        class="sharp-input w-full p-3 text-sm font-mono tracking-wide placeholder-zinc-700">
+                </div>
+                <button type="submit" class="sharp-btn sharp-btn-pink px-8 py-3 text-xs flex items-center justify-center space-x-2">
+                    <span>EXECUTE</span>
+                    <span>&crarr;</span>
+                </button>
+            </form>
+
+            <div class="flex flex-wrap gap-2 mt-3 text-[11px] text-zinc-500">
+                <span class="text-zinc-700">QUICK_TAGS:</span>
+                <a href="https://search.bilibili.com/all?keyword=SUBARU+BRZ" target="_blank" class="hover:text-[#ff6699] underline">[BRZ_MODS]</a>
+                <a href="https://search.bilibili.com/all?keyword=Codeforces" target="_blank" class="hover:text-[#ff6699] underline">[CODEFORCES]</a>
+                <a href="https://search.bilibili.com/all?keyword=Cyberpunk" target="_blank" class="hover:text-[#ff6699] underline">[CYBERPUNK]</a>
+                <a href="https://search.bilibili.com/all?keyword=DeepSeek" target="_blank" class="hover:text-[#ff6699] underline">[DEEPSEEK]</a>
+            </div>
+        </div>
+
+        <!-- 磁贴 2: BRZ 购车预算进度 -->
+        <div class="sharp-card p-5 draggable-tile flex flex-col justify-between border-t-2 border-t-[#00ff88]" draggable="true" data-id="brz">
+            <div>
+                <div class="flex justify-between items-center text-xs text-zinc-400 mb-4 pb-2 border-b border-[#1c1c1c]">
+                    <span class="font-bold text-white uppercase flex items-center gap-1.5">
+                        <span class="drag-handle text-zinc-600 hover:text-white px-1 font-bold">::</span>
+                        <span class="w-1.5 h-1.5 bg-emerald-400"></span>
+                        BRZ_BUDGET_TRACKER
+                    </span>
+                    <button onclick="toggleBudgetConfig()" class="text-[10px] text-zinc-500 hover:text-emerald-400">[CONFIG]</button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[11px] text-zinc-500">SAVED_FUNDS:</span>
+                        <span id="brz-curr" class="text-2xl font-bold text-white font-mono">¥0</span>
+                    </div>
+                    <div class="flex justify-between items-baseline text-xs text-zinc-400">
+                        <span>TARGET_PRICE:</span>
+                        <span id="brz-target" class="font-mono text-zinc-300">¥0</span>
+                    </div>
+
+                    <div class="space-y-1 pt-1">
+                        <div class="pixel-bar">
+                            <div id="brz-bar" class="pixel-bar-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-zinc-500 font-mono">
+                            <span>RATIO: <strong id="brz-ratio" class="text-emerald-400">0%</strong></span>
+                            <span>GAP: <span id="brz-gap" class="text-zinc-400">¥0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 配置面板 -->
+                <div id="budget-config" class="hidden mt-4 p-3 bg-[#030303] border border-[#222] space-y-2 text-xs">
+                    <div>
+                        <span class="text-[10px] text-zinc-500">CURRENT (¥):</span>
+                        <input type="number" id="cfg-curr" class="sharp-input w-full p-1.5 mt-1 text-xs">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-zinc-500">TARGET (¥):</span>
+                        <input type="number" id="cfg-target" class="sharp-input w-full p-1.5 mt-1 text-xs">
+                    </div>
+                    <button onclick="saveBudgetCfg()" class="sharp-btn w-full py-1.5 text-[11px] text-emerald-400">APPLY_CONFIG</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1.5 mt-6 pt-3 border-t border-[#1c1c1c]">
+                <button onclick="depositBudget(1000)" class="sharp-btn py-1.5 text-[10px]">+¥1K</button>
+                <button onclick="depositBudget(10000)" class="sharp-btn py-1.5 text-[10px]">+¥10K</button>
+                <button onclick="depositBudget(50000)" class="sharp-btn py-1.5 text-[10px]">+¥50K</button>
+            </div>
+        </div>
+
+        <!-- 磁贴 3: API TOKEN 监控面板 -->
+        <div class="sharp-card p-5 draggable-tile flex flex-col justify-between border-t-2 border-t-purple-500" draggable="true" data-id="token">
+            <div>
+                <div class="flex justify-between items-center text-xs text-zinc-400 mb-4 pb-2 border-b border-[#1c1c1c]">
+                    <span class="font-bold text-white uppercase flex items-center gap-1.5">
+                        <span class="drag-handle text-zinc-600 hover:text-white px-1 font-bold">::</span>
+                        <span class="w-1.5 h-1.5 bg-purple-500"></span>
+                        API_TOKEN_MONITOR
+                    </span>
+                    <span class="text-[10px] text-purple-400">[ONLINE]</span>
+                </div>
+
+                <div class="flex justify-between items-baseline mb-3">
+                    <span class="text-[11px] text-zinc-500">TOTAL_TOKENS:</span>
+                    <span class="text-2xl font-bold text-white font-mono" id="token-total">1,048.5M</span>
+                </div>
+
+                <div class="text-[10px] text-zinc-600 mb-1">USAGE_TIMELINE (24H):</div>
+                <div class="grid grid-cols-12 gap-1 items-end h-16 p-1 bg-[#030303] border border-[#222]" id="pixel-histogram">
+                    <!-- 动态柱状图 -->
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-[#1c1c1c] text-[10px] text-zinc-500">
+                <span>GATEWAY: CONNECTED</span>
+                <button onclick="refreshTokens()" class="text-purple-400 hover:underline">[REFRESH]</button>
+            </div>
+        </div>
+
+        <!-- 磁贴 4: CODEFORCES 刷题进度 -->
+        <div class="sharp-card p-5 draggable-tile flex flex-col justify-between border-t-2 border-t-cyan-400" draggable="true" data-id="cf">
+            <div>
+                <div class="flex justify-between items-center text-xs text-zinc-400 mb-4 pb-2 border-b border-[#1c1c1c]">
+                    <span class="font-bold text-white uppercase flex items-center gap-1.5">
+                        <span class="drag-handle text-zinc-600 hover:text-white px-1 font-bold">::</span>
+                        <span class="w-1.5 h-1.5 bg-cyan-400"></span>
+                        CODEFORCES_STATUS
+                    </span>
+                    <span class="text-[10px] text-cyan-400 font-mono">@Tourist_Fan</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="bg-[#030303] p-2.5 border border-[#222]">
+                        <div class="text-[10px] text-zinc-500">RATING</div>
+                        <div class="text-xl font-bold text-cyan-400 font-mono mt-0.5" id="cf-rating">1895</div>
+                        <div class="text-[9px] text-zinc-600 mt-1">CANDIDATE MASTER</div>
+                    </div>
+                    <div class="bg-[#030303] p-2.5 border border-[#222]">
+                        <div class="text-[10px] text-zinc-500">SOLVED</div>
+                        <div class="text-xl font-bold text-emerald-400 font-mono mt-0.5" id="cf-solved">486</div>
+                        <div class="text-[9px] text-zinc-600 mt-1">MONTHLY: +42</div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="text-[10px] text-zinc-600">SUBMISSION_ACTIVITY:</div>
+                    <div class="flex space-x-1 h-3" id="cf-activity-bar"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-[#1c1c1c] text-[10px] text-zinc-500">
+                <span id="cf-sync-state">SYNC: OK</span>
+                <button onclick="syncCF()" class="text-cyan-400 hover:underline">[SYNC_API]</button>
+            </div>
+        </div>
+
+        <!-- 磁贴 5: 模型用量占比表格 (span-2) -->
+        <div class="sharp-card p-5 draggable-tile border-l-2 border-l-[#00ff88] col-span-1 lg:col-span-2" draggable="true" data-id="models">
+            <div class="flex justify-between items-center pb-2 mb-3 border-b border-[#1c1c1c]">
+                <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                    <span class="drag-handle text-zinc-600 hover:text-white px-1 font-bold">::</span>
+                    <span class="text-emerald-400">&gt;</span>
+                    <span>MODEL_BREAKDOWN_MATRIX</span>
+                </div>
+                <div class="text-[10px] text-zinc-500 font-mono">CYCLE: 2026-10</div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead>
+                        <tr class="text-zinc-600 border-b border-[#222] text-[10px]">
+                            <th class="pb-2">MODEL</th>
+                            <th class="pb-2">REQ</th>
+                            <th class="pb-2">TOKENS</th>
+                            <th class="pb-2 w-1/3">RATIO</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#141414] text-zinc-300">
+                        <tr>
+                            <td class="py-2 font-bold text-white flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 bg-purple-500"></span>
+                                <span>DeepSeek-V4.1-Flash</span>
+                            </td>
+                            <td class="py-2 text-zinc-500">3,860</td>
+                            <td class="py-2 text-purple-400">782.8M</td>
+                            <td class="py-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="pixel-bar w-full"><div class="pixel-bar-fill bg-purple-500" style="width: 42.1%;"></div></div>
+                                    <span class="text-[10px] text-zinc-500 w-8 text-right">42%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 font-bold text-white flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 bg-cyan-400"></span>
+                                <span>GPT-5.6-Sol</span>
+                            </td>
+                            <td class="py-2 text-zinc-500">89</td>
+                            <td class="py-2 text-cyan-400">19.5M</td>
+                            <td class="py-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="pixel-bar w-full"><div class="pixel-bar-fill bg-cyan-400" style="width: 41.1%;"></div></div>
+                                    <span class="text-[10px] text-zinc-500 w-8 text-right">41%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 font-bold text-white flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 bg-emerald-400"></span>
+                                <span>Claude-3.5-Sonnet</span>
+                            </td>
+                            <td class="py-2 text-zinc-500">1,546</td>
+                            <td class="py-2 text-emerald-400">225.7M</td>
+                            <td class="py-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="pixel-bar w-full"><div class="pixel-bar-fill bg-emerald-400" style="width: 16.8%;"></div></div>
+                                    <span class="text-[10px] text-zinc-500 w-8 text-right">17%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 底栏 -->
+    <footer class="w-full max-w-7xl mx-auto pt-4 mt-6 border-t border-[#222] flex flex-col sm:flex-row justify-between text-[10px] text-zinc-600 gap-2">
+        <div>TIP: DRAG ANY TILE BY THE <strong class="text-zinc-400">[::]</strong> HANDLE TO REARRANGE LAYOUT.</div>
+        <div class="flex space-x-4 font-mono">
+            <span>CPU: 8%</span>
+            <span>MEM: 3.2GB</span>
+            <span>STATUS: STABLE</span>
+        </div>
+    </footer>
+
+    <!-- 提示消息框 -->
+    <div id="sys-toast" class="fixed bottom-4 right-4 bg-[#0a0a0a] border border-[#00ff88] text-white p-3 text-xs font-mono hidden z-50">
+        <span class="text-emerald-400">&gt;</span> <span id="toast-msg">SYS_MSG</span>
+    </div>
+
+    <!-- 脚本逻辑：时钟、BRZ本地存储、拖拽排序、图表生成 -->
+    <script>
+        // 1. 实时硬核时钟
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('sys-clock').innerText = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. BRZ 预算逻辑与持久化
+        let brzData = JSON.parse(localStorage.getItem('brz_sharp_cfg')) || { current: 248000, target: 330000 };
+
+        function updateBrzUI() {
+            document.getElementById('brz-curr').innerText = `¥ ${brzData.current.toLocaleString()}`;
+            document.getElementById('brz-target').innerText = `¥ ${brzData.target.toLocaleString()}`;
+            const ratio = Math.min(100, (brzData.current / brzData.target) * 100).toFixed(1);
+            document.getElementById('brz-ratio').innerText = `${ratio}%`;
+            document.getElementById('brz-bar').style.width = `${ratio}%`;
+            document.getElementById('brz-gap').innerText = `¥ ${Math.max(0, brzData.target - brzData.current).toLocaleString()}`;
+            localStorage.setItem('brz_sharp_cfg', JSON.stringify(brzData));
+        }
+
+        function depositBudget(amt) {
+            brzData.current += amt;
+            updateBrzUI();
+            logToast(`BRZ_SAVINGS_UPDATED: +¥${amt.toLocaleString()}`);
+        }
+
+        function toggleBudgetConfig() {
+            const cfg = document.getElementById('budget-config');
+            cfg.classList.toggle('hidden');
+            document.getElementById('cfg-curr').value = brzData.current;
+            document.getElementById('cfg-target').value = brzData.target;
+        }
+
+        function saveBudgetCfg() {
+            const c = parseInt(document.getElementById('cfg-curr').value);
+            const t = parseInt(document.getElementById('cfg-target').value);
+            if(!isNaN(c) && !isNaN(t) && t > 0) {
+                brzData.current = c;
+                brzData.target = t;
+                updateBrzUI();
+                toggleBudgetConfig();
+                logToast('CONFIG_SAVED: PARAMETERS_APPLIED');
+            }
+        }
+        updateBrzUI();
+
+        // 3. API Token 柱状图生成
+        function renderHistogram() {
+            const el = document.getElementById('pixel-histogram');
+            el.innerHTML = '';
+            const heights = [25, 40, 35, 85, 60, 95, 100, 45, 30, 70, 55, 90];
+            heights.forEach(h => {
+                const col = document.createElement('div');
+                col.className = 'w-full bg-[#141414] hover:bg-purple-500 border-t border-purple-500/40 transition-colors';
+                col.style.height = `${h}%`;
+                el.appendChild(col);
+            });
+        }
+        renderHistogram();
+
+        function refreshTokens() {
+            renderHistogram();
+            logToast('GATEWAY_SYNC: TOKEN_USAGE_REFRESHED');
+        }
+
+        // 4. Codeforces 状态与微缩提交条
+        function renderCFActivity() {
+            const container = document.getElementById('cf-activity-bar');
+            container.innerHTML = '';
+            for(let i = 0; i < 20; i++) {
+                const opacity = Math.random();
+                const block = document.createElement('div');
+                block.className = 'flex-1 bg-cyan-400';
+                block.style.opacity = opacity < 0.25 ? '0.15' : opacity.toFixed(2);
+                container.appendChild(block);
+            }
+        }
+        renderCFActivity();
+
+        function syncCF() {
+            document.getElementById('cf-sync-state').innerText = 'SYNCING...';
+            setTimeout(() => {
+                const r = 1895 + Math.floor(Math.random() * 6) - 2;
+                document.getElementById('cf-rating').innerText = r;
+                document.getElementById('cf-sync-state').innerText = 'SYNC: OK';
+                renderCFActivity();
+                logToast('CF_API_SYNCED: RATIO_UPDATED');
+            }, 500);
+        }
+
+        // 5. 磁贴鼠标拖拽排序逻辑 (HTML5 Drag & Drop API + LocalStorage)
+        const grid = document.getElementById('tiles-grid');
+        
+        // 读取保存的磁贴顺序
+        const savedOrder = JSON.parse(localStorage.getItem('sharp_tile_order'));
+        if (savedOrder && Array.isArray(savedOrder)) {
+            const tileMap = {};
+            Array.from(grid.children).forEach(tile => {
+                tileMap[tile.getAttribute('data-id')] = tile;
+            });
+            savedOrder.forEach(id => {
+                if (tileMap[id]) {
+                    grid.appendChild(tileMap[id]);
+                }
+            });
+        }
+
+        let draggedTile = null;
+
+        document.querySelectorAll('.draggable-tile').forEach(tile => {
+            tile.addEventListener('dragstart', function(e) {
+                draggedTile = this;
+                setTimeout(() => this.classList.add('dragging'), 0);
+            });
+
+            tile.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                draggedTile = null;
+                document.querySelectorAll('.draggable-tile').forEach(t => t.classList.remove('drag-over'));
+                saveTileOrder();
+            });
+
+            tile.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+
+            tile.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                if (this !== draggedTile) {
+                    this.classList.add('drag-over');
+                }
+            });
+
+            tile.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+
+            tile.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                if (this !== draggedTile) {
+                    let allTiles = Array.from(grid.querySelectorAll('.draggable-tile'));
+                    let draggedIdx = allTiles.indexOf(draggedTile);
+                    let targetIdx = allTiles.indexOf(this);
+                    
+                    if (draggedIdx < targetIdx) {
+                        grid.insertBefore(draggedTile, this.nextSibling);
+                    } else {
+                        grid.insertBefore(draggedTile, this);
+                    }
+                }
+            });
+        });
+
+        function saveTileOrder() {
+            const order = Array.from(grid.querySelectorAll('.draggable-tile')).map(t => t.getAttribute('data-id'));
+            localStorage.setItem('sharp_tile_order', JSON.stringify(order));
+            logToast('LAYOUT_SAVED: GRID_ORDER_UPDATED');
+        }
+
+        function resetTileOrder() {
+            localStorage.removeItem('sharp_tile_order');
+            location.reload();
+        }
+
+        // 提示框工具
+        function logToast(msg) {
+            const toast = document.getElementById('sys-toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+    </script>
+</body>
+</html>

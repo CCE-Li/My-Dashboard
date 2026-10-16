@@ -1,0 +1,178 @@
+{
+  "generatedAt": "2026-10-16T13:20:26.636Z",
+  "source": "~/.commandcode",
+  "sessionFiles": 49,
+  "totals": {
+    "requests": 3835,
+    "inputTokens": 932427655,
+    "outputTokens": 4742030,
+    "cacheReadTokens": 900890255,
+    "cacheWriteTokens": 273355,
+    "costUsd": 21.90352
+  },
+  "byModel": [
+    {
+      "model": "deepseek/deepseek-v4.1-flash",
+      "requests": 2633,
+      "inputTokens": 703907158,
+      "outputTokens": 3500286,
+      "cacheReadTokens": 683102464,
+      "cacheWriteTokens": 0,
+      "costUsd": 7.270183
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash",
+      "requests": 1125,
+      "inputTokens": 209745008,
+      "outputTokens": 1215860,
+      "cacheReadTokens": 199285888,
+      "cacheWriteTokens": 0,
+      "costUsd": 2.896242
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "requests": 77,
+      "inputTokens": 18775489,
+      "outputTokens": 25884,
+      "cacheReadTokens": 18501903,
+      "cacheWriteTokens": 273355,
+      "costUsd": 11.737095
+    }
+  ],
+  "byDay": [
+    {
+      "day": "2026-09-18",
+      "requests": 122,
+      "totalTokens": 7753849,
+      "costUsd": 0.111144834
+    },
+    {
+      "day": "2026-09-19",
+      "requests": 128,
+      "totalTokens": 16285055,
+      "costUsd": 0.2726010660000001
+    },
+    {
+      "day": "2026-09-20",
+      "requests": 181,
+      "totalTokens": 14994538,
+      "costUsd": 0.21899717399999996
+    },
+    {
+      "day": "2026-09-21",
+      "requests": 18,
+      "totalTokens": 627221,
+      "costUsd": 0.024306228
+    },
+    {
+      "day": "2026-09-25",
+      "requests": 16,
+      "totalTokens": 475588,
+      "costUsd": 0.019753962
+    },
+    {
+      "day": "2026-09-27",
+      "requests": 14,
+      "totalTokens": 436181,
+      "costUsd": 0.021031487999999994
+    },
+    {
+      "day": "2026-09-29",
+      "requests": 166,
+      "totalTokens": 28486185,
+      "costUsd": 0.6612646920000002
+    },
+    {
+      "day": "2026-09-30",
+      "requests": 400,
+      "totalTokens": 106981580,
+      "costUsd": 0.9777339299999993
+    },
+    {
+      "day": "2026-10-01",
+      "requests": 757,
+      "totalTokens": 306692031,
+      "costUsd": 14.060072997999994
+    },
+    {
+      "day": "2026-10-02",
+      "requests": 228,
+      "totalTokens": 75883190,
+      "costUsd": 0.993355788
+    },
+    {
+      "day": "2026-10-04",
+      "requests": 291,
+      "totalTokens": 59057975,
+      "costUsd": 1.017693294
+    },
+    {
+      "day": "2026-10-05",
+      "requests": 108,
+      "totalTokens": 12146571,
+      "costUsd": 0.40153628399999985
+    },
+    {
+      "day": "2026-10-06",
+      "requests": 95,
+      "totalTokens": 11729722,
+      "costUsd": 0.14418635999999999
+    },
+    {
+      "day": "2026-10-07",
+      "requests": 206,
+      "totalTokens": 54435034,
+      "costUsd": 0.9141006599999999
+    },
+    {
+      "day": "2026-10-09",
+      "requests": 9,
+      "totalTokens": 249498,
+      "costUsd": 0.01588527
+    },
+    {
+      "day": "2026-10-10",
+      "requests": 3,
+      "totalTokens": 68849,
+      "costUsd": 0.005588435999999999
+    },
+    {
+      "day": "2026-10-11",
+      "requests": 507,
+      "totalTokens": 159410821,
+      "costUsd": 1.1524071660000013
+    },
+    {
+      "day": "2026-10-16",
+      "requests": 586,
+      "totalTokens": 81455797,
+      "costUsd": 0.8918603759999996
+    }
+  ],
+  "byHour": [
+    {
+      "hour": "2026-10-16T15",
+      "requests": 243,
+      "totalTokens": 19351132,
+      "costUsd": 0.384491
+    },
+    {
+      "hour": "2026-10-16T16",
+      "requests": 140,
+      "totalTokens": 20141976,
+      "costUsd": 0.163741
+    },
+    {
+      "hour": "2026-10-16T17",
+      "requests": 185,
+      "totalTokens": 36209995,
+      "costUsd": 0.263605
+    },
+    {
+      "hour": "2026-10-16T18",
+      "requests": 18,
+      "totalTokens": 5752694,
+      "costUsd": 0.080023
+    }
+  ]
+}

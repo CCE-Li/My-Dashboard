@@ -1,0 +1,37 @@
+{
+  "name": "my-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "硬核工业风个人起始页仪表盘：Codeforces 同步、Command Code 用量、BRZ 购车基金镜像",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm-run-all type-check build-only",
+    "build-only": "vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write src tests scripts",
+    "sync:usage": "node scripts/sync-commandcode-usage.mjs"
+  },
+  "dependencies": {
+    "pinia": "^4.0.3",
+    "vue": "^3.5.43"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.5",
+    "@types/node": "^26.6.5",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/tsconfig": "^0.9.1",
+    "npm-run-all2": "^9.0.3",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "vue-tsc": "^3.3.13"
+  }
+}

@@ -1,0 +1,51 @@
+/**
+ * 设计令牌。所有颜色/间距/字体只在这里定义，组件不得写死色值。
+ * 视觉基调：绝对直角、近黑背景、荧光绿主色 + 品红辅色。
+ */
+:root {
+  /* 背景层次（由深到浅） */
+  --bg-base: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-sunken: #030303;
+  --bg-raised: #111111;
+  --bg-hover-accent: #0f1710;
+
+  /* 边框 */
+  --border: #222222;
+  --border-strong: #333333;
+  --border-subtle: #1c1c1c;
+  --border-track: #262626;
+  --border-fill: #141414;
+
+  /* 文字 */
+  --text-primary: #ffffff;
+  --text-body: #d1d5db;
+  --text-muted: #a1a1aa;
+  --text-dim: #71717a;
+  --text-faint: #52525b;
+
+  /* 强调色 */
+  --accent: #00ff88;
+  --accent-soft: rgba(0, 255, 136, 0.1);
+  --accent-pink: #ff6699;
+  --accent-cyan: #22d3ee;
+  --accent-purple: #a855f7;
+
+  /* 字体 */
+  --font-mono: 'JetBrains Mono', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.05em;
+
+  /* 尺寸 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --shell-max-width: 80rem;
+
+  /* 动效 */
+  --transition-fast: 0.15s ease;
+  --transition-instant: 0.1s ease;
+}
