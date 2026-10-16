@@ -85,7 +85,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <TileFrame tile-id="brz" title="BRZ_BUDGET_TRACKER" accent="var(--accent)" edge="top">
+  <TileFrame
+    tile-id="brz"
+    title="BRZ_BUDGET_TRACKER"
+    accent="var(--accent)"
+    edge="top"
+    site-url="https://cce-li.github.io/BRZ-Fund/"
+    site-label="BRZ-Fund 应用"
+  >
     <template #meta>
       <DataSourceBadge :origin="store.origin" />
     </template>

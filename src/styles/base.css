@@ -137,16 +137,6 @@ body {
   cursor: default;
 }
 
-.draggable-tile.dragging {
-  opacity: 0.3;
-  border: 1px dashed var(--accent);
-}
-
-.draggable-tile.drag-over {
-  border-color: var(--accent) !important;
-  background-color: var(--bg-hover-accent) !important;
-}
-
 .drag-handle {
   cursor: grab;
   user-select: none;

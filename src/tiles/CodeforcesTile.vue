@@ -80,6 +80,8 @@ onMounted(() => {
     title="CODEFORCES_STATUS"
     accent="var(--accent-cyan)"
     edge="top"
+    site-url="https://codeforces.com"
+    site-label="Codeforces 官网"
   >
     <template #meta>
       <span class="cf-meta">

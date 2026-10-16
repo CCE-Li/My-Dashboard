@@ -1,5 +1,7 @@
 <script setup lang="ts">
-withDefaults(
+import { computed } from 'vue';
+
+const props = withDefaults(
   defineProps<{
     /** 磁贴 id，用于拖拽落点识别 */
     tileId: string;
@@ -10,8 +12,16 @@ withDefaults(
     edge?: 'top' | 'left';
     /** 标题右侧的小字 */
     meta?: string;
+    /** 该磁贴所监控服务的官网主界面，给每个磁贴统一提供跳转入口 */
+    siteUrl?: string;
+    /** 官网名称，用于 tooltip 与无障碍标签 */
+    siteLabel?: string;
   }>(),
-  { accent: 'var(--accent)', edge: 'top', meta: '' },
+  { accent: 'var(--accent)', edge: 'top', meta: '', siteUrl: '', siteLabel: '' },
+);
+
+const siteTitle = computed(() =>
+  props.siteLabel ? `打开 ${props.siteLabel}` : '打开官网主界面',
 );
 </script>
 
@@ -30,6 +40,16 @@ withDefaults(
       </h2>
       <div class="tile-card__meta">
         <slot name="meta">{{ meta }}</slot>
+        <a
+          v-if="siteUrl"
+          class="tile-site"
+          :href="siteUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="siteTitle"
+          :aria-label="siteTitle"
+          >↗</a
+        >
       </div>
     </header>
 
@@ -60,11 +80,40 @@ withDefaults(
 }
 
 .tile-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: 0.625rem;
   color: var(--text-faint);
   font-family: var(--font-mono);
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* 每个磁贴右上角的官网跳转入口 */
+.tile-site {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: none;
+  transition:
+    color var(--transition-instant),
+    background-color var(--transition-instant),
+    border-color var(--transition-instant);
+}
+
+.tile-site:hover {
+  background: var(--card-accent, var(--accent));
+  border-color: var(--card-accent, var(--accent));
+  color: #000000;
 }
 
 .tile-card__handle {
@@ -85,6 +134,7 @@ withDefaults(
 
 .tile-card__foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
