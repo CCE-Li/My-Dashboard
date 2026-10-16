@@ -31,6 +31,15 @@ export const APP_CONFIG = {
     dataPath: 'data/command-code-usage.json',
   },
 
+  api: {
+    /**
+     * Command Code Provider API 根地址。
+     * 注意：该 API 只有调用模型用的端点，**没有读取用量的端点**，
+     * 所以 API key 只用于「鉴权验证」，不参与磁贴上的用量计算。
+     */
+    baseUrl: 'https://api.commandcode.ai/provider/v1',
+  },
+
   brzFund: {
     /** 必须与 BRZ-Fund/src/db/schema.ts 的 DB_NAME 一致 */
     dbName: 'brz-fund',

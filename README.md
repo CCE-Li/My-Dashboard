@@ -121,6 +121,22 @@ npm run sync:usage
 > 采集结果的正确性已用独立实现交叉核对：3765 个 usage 行、`costUsd` 合计
 > $21.75658，两条口径完全一致。
 
+**关于 API key 配置面板**：磁贴的 `[CONFIG]` 可以保存 API key 并做鉴权验证。
+需要说清楚它的能力边界：
+
+- 官方 Provider API 只有 5 个端点（chat/completions、responses、messages、models、
+  systemone），**全部是调用模型的，没有读取用量的**。所以 key **不参与**磁贴数字的计算，
+  数字永远来自上面的本地快照。把 key 填进去并不会让用量变成实时的。
+- 它的实际用途是 `TEST` 鉴权验证：用一个故意不存在的模型 id 发一次最小请求，
+  依据官方错误表区分结论 —— 401 = key 无效、403 = 套餐无 API 权限、
+  400 `unsupported_model` = 鉴权通过。因为模型不存在，服务端不会真的推理，
+  **不消耗额度**。
+- 判定策略是保守的：只有拿到明确的 `unsupported_model` 才报「通过」，其余 400 一律
+  报「无法确定」。对一个「你的 key 有效吗」的断言来说，误报比含糊更糟。
+- key 只存在本机 localStorage（0600 级别的浏览器存储），不进仓库、不进构建产物；
+  界面上只显示打码值。**不要把 key 写进 `.env` 以外的任何被提交的文件**，
+  Vite 会把 `VITE_*` 变量内联进 JS bundle，而本仓库是公开的。
+
 线上部署时，GitHub Actions 跑不了这个脚本（CI 上没有本机数据），
 所以使用仓库里已提交的 `public/data/command-code-usage.json` 快照。
 **想让线上数字更新，就在本机跑一次 `npm run sync:usage` 并提交该文件。**
@@ -151,6 +167,39 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
 > 所以代码里先用 `indexedDB.databases()` 确认存在，确认不了（浏览器不支持该 API）
 > 就老实退化为导入备份，绝不冒险。
 
+## 界面交互
+
+- **拖拽排序**：按住磁贴标题左侧的 `[::]` 手柄拖动。拖动中其他磁贴会带动画让位，
+  被拖磁贴以虚线空洞标出落点，松手后整体平滑归位。顺序存在本机 localStorage，
+  顶栏 `[RESET_LAYOUT]` 可恢复默认。动画的几何计算在 `src/domain/tileLayout.ts`
+  （纯函数，有单测锁住"预览位移 == 最终落点位移"这个约束）。
+- **滚轮调节用量跨度**：鼠标在 `API_TOKEN_MONITOR` 的条形图上滚动即可切换
+  24H / 48H / 7D / 14D / 30D。小时档位读 `byHour`（采集器只保留 48 小时），
+  天档位读 `byDay`；跨度选择会记住。档位定义在 `src/config/usageSpans.ts`。
+- **官网跳转**：每个磁贴右上角都有 `↗`，指向该磁贴所监控服务的官网主界面
+  （搜索磁贴会跟随所选平台变化）。在 `TileFrame` 上通过 `site-url` / `site-label` 声明。
+- **配额进度条**：`MODEL_BREAKDOWN_MATRIX` 的表头上方有三条进度 ——
+  `5H` / `24H` 滚动窗口的 token 占用，以及`总额度`（累计费用 / 充值额度）。
+  快到 80% 转黄、用满转粉，超额封顶 100%。
+- **平台切换**：搜索磁贴支持 BILIBILI / YOUTUBE / GITHUB / GOOGLE / BING / BAIDU / ZHIHU，
+  默认 B 站。切换会同时改掉表单 action、关键词参数名、官网链接与快速标签。
+  新增平台只需往 `src/config/searchPlatforms.ts` 的 `SEARCH_PLATFORMS` 加一条。
+- **API key 配置**：`API_TOKEN_MONITOR` 的 `[CONFIG]` 面板可保存 Command Code API key
+  （仅写入本机 localStorage，键名 `mydash:v1:command-code-api-key`，界面上只显示打码值），
+  并提供 `TEST` 做鉴权验证。
+
+### 配额进度条的分母为什么必须自己填
+
+进度条的**分子是真实用量**（从 `~/.commandcode` 会话快照算出的 5h / 24h 窗口 token
+与累计费用），但**分母只能由你填**：官方没有任何查询额度的接口，
+本机会话文件里也只有用量、没有额度。所以：
+
+- `MODEL_BREAKDOWN_MATRIX` 的 `[CONFIG]` 里填三个值（token 数 / token 数 / 美元），
+  0 表示该项不画进度；数值存在 `mydash:v1:quota-config`。
+- 分子是滚动的：5h / 24h 窗口取自采集器的 `byHour` 桶（覆盖最近 48 小时）。
+- 没填配额时进度条显示「未设配额」而**不是画一条假进度** —— 这是刻意的，
+  免得让人误以为系统知道你的额度。
+
 ## 部署
 
 推送到 `main` 即触发 `.github/workflows/deploy.yml`：type-check → test → build → 发布
@@ -170,6 +219,9 @@ IndexedDB，两者必须部署在**同一 GitHub 账号的 Pages 下**（同一 
 ## 已知边界
 
 - `SOLVED` 是抓取窗口内的通过题数，不是历史总数（CF API 限制）。
-- Command Code 用量是**快照**，不是实时值；页面上标注了生成时间。
+- Command Code 用量是**快照**，不是实时值；页面上标注了生成时间，条形图跨度只影响展示窗口。
+- **API key 不能让用量变实时**（官方没有用量端点），它只用于鉴权验证。
 - 导入的 BRZ 备份是静态快照，不会随后续记账自动更新；同源直读才是实时的。
-- 布局顺序、CF handle、导入的备份都存在本机 localStorage，换机器需重设。
+- 拖拽用的是 HTML5 Drag & Drop，**触屏设备上不生效**（手机上无法拖拽排序）。
+- 布局顺序、CF handle、搜索平台、用量跨度、API key、导入的备份都存在本机 localStorage，
+  换机器需重设。

@@ -57,4 +57,8 @@ export const STORAGE_KEYS = {
   codeforcesCache: 'codeforces-cache',
   brzBackup: 'brz-backup-snapshot',
   brzBackupMeta: 'brz-backup-meta',
+  commandCodeApiKey: 'command-code-api-key',
+  searchPlatform: 'search-platform',
+  usageSpan: 'usage-span',
+  quotaConfig: 'quota-config',
 } as const;
