@@ -39,7 +39,7 @@ function colorFor(index: number): string {
 function toneFor(bar: QuotaBar): string {
   if (!bar.configured) return 'var(--text-faint)';
   if (bar.percent >= 99.9) return 'var(--accent-pink)';
-  if (bar.percent >= 80) return '#facc15';
+  if (bar.percent >= 80) return 'var(--warn)';
   return 'var(--accent)';
 }
 

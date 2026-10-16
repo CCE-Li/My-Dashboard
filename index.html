@@ -13,6 +13,17 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // 尽早套用已保存的主题，避免首屏先闪一下默认配色。
+      // 键名必须与 src/services/storage.ts 里的 STORAGE_KEYS.theme 一致；
+      // 值非法也没关系 —— tokens.css 的 :root 会兜住默认主题。
+      try {
+        var savedTheme = localStorage.getItem('mydash:v1:theme');
+        if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+      } catch (error) {
+        /* 隐私模式下读不到 localStorage，忽略即可 */
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

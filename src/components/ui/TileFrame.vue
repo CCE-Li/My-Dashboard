@@ -113,7 +113,7 @@ const siteTitle = computed(() =>
 .tile-site:hover {
   background: var(--card-accent, var(--accent));
   border-color: var(--card-accent, var(--accent));
-  color: #000000;
+  color: var(--on-accent);
 }
 
 .tile-card__handle {

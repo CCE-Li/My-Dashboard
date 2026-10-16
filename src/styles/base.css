@@ -22,15 +22,35 @@ body {
   font-size: 16px;
   letter-spacing: var(--tracking-tight);
   -webkit-font-smoothing: antialiased;
+  /* VT220 主题下就是荧光粉的晕开效果，其它主题为 none */
+  text-shadow: var(--text-glow);
+}
+
+/**
+ * 氛围层：Blade Runner 的琥珀雾霾 / VT220 的扫描线。
+ * 固定覆盖在最上层但不拦截任何指针事件，配色由各主题的
+ * --atmosphere-image 与 --atmosphere-opacity 决定；默认主题不渲染。
+ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: var(--atmosphere-image);
+  opacity: var(--atmosphere-opacity);
+  transition: opacity var(--transition-fast);
 }
 
 #app {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 ::selection {
   background: var(--accent);
-  color: #000000;
+  color: var(--on-accent);
 }
 
 /* 自定义窄滚动条 */
@@ -162,7 +182,7 @@ body {
 
 .sharp-input:focus {
   border-color: var(--accent);
-  background: #080808;
+  background: var(--bg-focus);
 }
 
 .sharp-input::placeholder {
@@ -172,7 +192,7 @@ body {
 .sharp-btn {
   background: var(--bg-raised);
   border: 1px solid var(--border-strong);
-  color: #e5e5e5;
+  color: var(--btn-text);
   cursor: pointer;
   font-family: inherit;
   letter-spacing: inherit;
@@ -186,13 +206,13 @@ body {
 .sharp-btn:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
-  color: #000000;
+  color: var(--on-accent);
 }
 
 .sharp-btn--pink:hover:not(:disabled) {
   background: var(--accent-pink);
   border-color: var(--accent-pink);
-  color: #000000;
+  color: var(--on-accent);
 }
 
 .sharp-btn:disabled {

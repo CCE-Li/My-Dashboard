@@ -82,6 +82,30 @@ My-Dashboard/
 
 > id 是布局持久化的键，**发布后不要改名**，否则用户的拖拽顺序会重置。
 
+## 扩展：新增一个主题
+
+主题就是一组 CSS 变量覆盖，组件代码不用动：
+
+1. 在 `src/styles/tokens.css` 里复制一份变量块，改成新的配色：
+
+   ```css
+   [data-theme='mytheme'] {
+     --bg-base: #...;
+     --accent: #...;
+     /* 氛围层可选：雾霾用 radial-gradient，扫描线用 repeating-linear-gradient */
+     --atmosphere-image: repeating-linear-gradient(...);
+     --atmosphere-opacity: 1;
+     --text-glow: 0 0 6px rgba(...);
+   }
+   ```
+
+2. 在 `src/config/themes.ts` 的 `THEMES` 里加一条（id、标签、说明、themeColor）。
+3. 完成。顶栏选择器、持久化、`<meta name="theme-color">` 都会自动跟上。
+
+**铁律**：组件里不得出现硬编码色值（`#xxx`、`rgba()`），一律走 token——
+否则换主题时那处不会跟着变。`--on-accent` 是"强调色底上的文字颜色"，
+深色底与浅色底主题对它的取值完全不同，别用 `#000` 写死。
+
 ## 三路数据接入的真实机制
 
 ### 1. Codeforces —— 直连官方 API
@@ -169,6 +193,11 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
 
 ## 界面交互
 
+- **主题切换**：顶栏 `THEME:` 三个可选主题，选择记在本机（`mydash:v1:theme`），
+  首屏由 `index.html` 里的一小段内联脚本提前套用，不会闪一下默认配色。
+  - `CYBERPUNK` —— 硬核工业风：近黑底 + 荧光绿主色 + 品红辅色（默认）
+  - `BLADE` —— Blade Runner 2049 的琥珀色雾霾：暖棕底、低对比、整体罩一层橙色空气
+  - `VT220` —— DEC VT220 终端：深色屏上的黄色荧光字，带 CRT 扫描线与文字辉光
 - **拖拽排序**：按住磁贴标题左侧的 `[::]` 手柄拖动。拖动中其他磁贴会带动画让位，
   被拖磁贴以虚线空洞标出落点，松手后整体平滑归位。顺序存在本机 localStorage，
   顶栏 `[RESET_LAYOUT]` 可恢复默认。动画的几何计算在 `src/domain/tileLayout.ts`

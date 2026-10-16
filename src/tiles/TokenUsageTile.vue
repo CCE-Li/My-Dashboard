@@ -43,7 +43,7 @@ const checkTone = computed(() => {
     case 'invalid':
       return 'var(--accent-pink)';
     case 'no-access':
-      return '#facc15';
+      return 'var(--warn)';
     default:
       return 'var(--text-dim)';
   }
@@ -295,7 +295,7 @@ onMounted(() => {
   height: 100%;
   min-width: 0;
   /* 空时段也要看得出「这里是时间轴的一格」 */
-  background: rgba(168, 85, 247, 0.07);
+  background: var(--track-soft);
 }
 
 .usage-timeline__fill {
@@ -305,7 +305,7 @@ onMounted(() => {
 }
 
 .usage-timeline__col--now {
-  background: rgba(168, 85, 247, 0.18);
+  background: var(--track-strong);
 }
 
 .usage-timeline__col--now .usage-timeline__fill {

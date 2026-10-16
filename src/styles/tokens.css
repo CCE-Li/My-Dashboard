@@ -1,14 +1,23 @@
 /**
  * 设计令牌。所有颜色/间距/字体只在这里定义，组件不得写死色值。
- * 视觉基调：绝对直角、近黑背景、荧光绿主色 + 品红辅色。
+ *
+ * 主题机制：`:root` 是默认主题（CYBERPUNK），另外两套主题通过
+ * `[data-theme='...']` 覆盖同一组变量。新增主题 = 复制一份变量块改色值，
+ * 组件代码一行都不用动。
+ *
+ * 视觉基调：绝对直角、低饱和背景、靠强调色点睛。
  */
-:root {
+
+/* ---------- 默认主题：CYBERPUNK ---------- */
+:root,
+[data-theme='cyberpunk'] {
   /* 背景层次（由深到浅） */
   --bg-base: #050505;
   --bg-surface: #0a0a0a;
   --bg-sunken: #030303;
   --bg-raised: #111111;
   --bg-hover-accent: #0f1710;
+  --bg-focus: #080808;
 
   /* 边框 */
   --border: #222222;
@@ -20,7 +29,6 @@
   /* 文字 */
   --text-primary: #ffffff;
   --text-body: #d1d5db;
-  --text-muted: #a1a1aa;
   --text-dim: #71717a;
   --text-faint: #52525b;
 
@@ -30,6 +38,20 @@
   --accent-pink: #ff6699;
   --accent-cyan: #22d3ee;
   --accent-purple: #a855f7;
+
+  /* 强调色上的文字、按钮文字、警示色 */
+  --on-accent: #000000;
+  --btn-text: #e5e5e5;
+  --warn: #facc15;
+
+  /* 图表轨道（未填充部分）的色调 */
+  --track-soft: rgba(168, 85, 247, 0.07);
+  --track-strong: rgba(168, 85, 247, 0.18);
+
+  /* 氛围层与发光 */
+  --atmosphere-image: none;
+  --atmosphere-opacity: 0;
+  --text-glow: none;
 
   /* 字体 */
   --font-mono: 'JetBrains Mono', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
@@ -48,4 +70,96 @@
   /* 动效 */
   --transition-fast: 0.15s ease;
   --transition-instant: 0.1s ease;
+}
+
+/* ---------- BLADE：琥珀雾霾 ---------- */
+[data-theme='bladerunner'] {
+  --bg-base: #120a04;
+  --bg-surface: #1b1007;
+  --bg-sunken: #0c0703;
+  --bg-raised: #2a1a0d;
+  --bg-hover-accent: #2e1d0b;
+  --bg-focus: #150d05;
+
+  --border: #3a2412;
+  --border-strong: #4f3219;
+  --border-subtle: #291809;
+  --border-track: #3a2412;
+  --border-fill: #241408;
+
+  --text-primary: #ffdca6;
+  --text-body: #e6bd85;
+  --text-dim: #a2794a;
+  --text-faint: #745431;
+
+  --accent: #ff9d2e;
+  --accent-soft: rgba(255, 157, 46, 0.16);
+  --accent-pink: #ff6a45;
+  --accent-cyan: #ffc46b;
+  --accent-purple: #d98a3c;
+
+  --on-accent: #1a0f06;
+  --btn-text: #f0d3a5;
+  --warn: #ffd166;
+
+  --track-soft: rgba(255, 157, 46, 0.09);
+  --track-strong: rgba(255, 157, 46, 0.22);
+
+  /* 琥珀雾霾 + 暗角：模拟那片橙色空气与湿地反光 */
+  --atmosphere-image:
+    radial-gradient(
+      ellipse 120% 80% at 50% 8%,
+      rgba(255, 138, 30, 0.16) 0%,
+      rgba(255, 110, 20, 0.06) 38%,
+      transparent 72%
+    ),
+    radial-gradient(ellipse 140% 90% at 50% 110%, rgba(255, 120, 25, 0.12) 0%, transparent 60%);
+  --atmosphere-opacity: 1;
+  --text-glow: none;
+}
+
+/* ---------- VT220：黄色荧光屏 ---------- */
+[data-theme='vt220'] {
+  --bg-base: #080b06;
+  --bg-surface: #0e120a;
+  --bg-sunken: #060804;
+  --bg-raised: #161b10;
+  --bg-hover-accent: #1c2413;
+  --bg-focus: #0a0e06;
+
+  --border: #26301c;
+  --border-strong: #3b4a2a;
+  --border-subtle: #1a2113;
+  --border-track: #26301c;
+  --border-fill: #131a0d;
+
+  --text-primary: #ffe98a;
+  --text-body: #e4d072;
+  --text-dim: #a89a52;
+  --text-faint: #6d6a3b;
+
+  --accent: #ffd24a;
+  --accent-soft: rgba(255, 210, 74, 0.14);
+  --accent-pink: #ff9b3d;
+  --accent-cyan: #b9e06a;
+  --accent-purple: #d8b23c;
+
+  --on-accent: #14180c;
+  --btn-text: #ece07e;
+  --warn: #ff8a3d;
+
+  --track-soft: rgba(255, 210, 74, 0.08);
+  --track-strong: rgba(255, 210, 74, 0.2);
+
+  /* 扫描线：CRT 的横向刷新纹 */
+  --atmosphere-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 233, 138, 0.05) 0px,
+    rgba(255, 233, 138, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  --atmosphere-opacity: 1;
+  /* 荧光粉的晕开效果 */
+  --text-glow: 0 0 6px rgba(255, 210, 74, 0.28);
 }

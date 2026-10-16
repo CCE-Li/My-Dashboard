@@ -61,4 +61,5 @@ export const STORAGE_KEYS = {
   searchPlatform: 'search-platform',
   usageSpan: 'usage-span',
   quotaConfig: 'quota-config',
+  theme: 'theme',
 } as const;

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { APP_CONFIG } from '@/config/app.config';
+import { useThemeStore } from '@/stores/useThemeStore';
 import { formatUtcClock } from '@/utils/time';
 
 const emit = defineEmits<{ resetLayout: [] }>();
+
+const themeStore = useThemeStore();
 
 const clock = ref(formatUtcClock());
 let timer: number | undefined;
@@ -29,6 +32,22 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="status-header__right">
+      <div class="theme-picker" role="group" aria-label="主题">
+        <span class="theme-picker__label">THEME:</span>
+        <button
+          v-for="item in themeStore.themes"
+          :key="item.id"
+          type="button"
+          class="theme-picker__option"
+          :class="{ 'theme-picker__option--active': item.id === themeStore.themeId }"
+          :aria-pressed="item.id === themeStore.themeId"
+          :title="item.description"
+          @click="themeStore.setTheme(item.id)"
+        >
+          [{{ item.label }}]
+        </button>
+      </div>
+
       <span>MODE: <span class="status-header__mode">EDITABLE_GRID</span></span>
       <button type="button" class="text-link" @click="emit('resetLayout')">[RESET_LAYOUT]</button>
       <span class="status-header__clock">{{ clock }}</span>
@@ -61,7 +80,7 @@ onBeforeUnmount(() => {
 
 .status-header__chip {
   background: var(--accent);
-  color: #000000;
+  color: var(--on-accent);
   font-weight: 700;
   padding: 0.125rem 0.375rem;
 }
@@ -90,5 +109,42 @@ onBeforeUnmount(() => {
   background: var(--bg-raised);
   border: 1px solid var(--border-strong);
   padding: 0.125rem 0.5rem;
+}
+
+.theme-picker {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.theme-picker__label {
+  color: var(--text-faint);
+  margin-right: var(--space-1);
+}
+
+.theme-picker__option {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  letter-spacing: inherit;
+  padding: 0.0625rem 0.25rem;
+  cursor: pointer;
+  transition:
+    color var(--transition-instant),
+    border-color var(--transition-instant);
+}
+
+.theme-picker__option:hover {
+  color: var(--accent);
+  border-color: var(--border-strong);
+}
+
+.theme-picker__option--active {
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
 }
 </style>
