@@ -32,7 +32,8 @@ export const SEARCH_PLATFORMS: readonly SearchPlatform[] = [
     label: 'BILIBILI',
     searchEndpoint: 'https://search.bilibili.com/all',
     queryParam: 'keyword',
-    homeUrl: 'https://www.bilibili.com',
+    // B 站主页的搜索入口页（用 ?page=Search 打开搜索态），而不是裸首页
+    homeUrl: 'https://www.bilibili.com/?page=Search',
   },
   {
     id: 'youtube',

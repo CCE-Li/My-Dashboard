@@ -31,6 +31,15 @@ describe('搜索平台配置', () => {
     }
   });
 
+  it('B 站的官网跳转指向搜索入口页，而不是裸首页', () => {
+    // 用户指定的地址：打开即处于搜索态
+    expect(getSearchPlatform('bilibili').homeUrl).toBe('https://www.bilibili.com/?page=Search');
+  });
+
+  it('搜索表单仍走真正的结果页（能接住 keyword 参数）', () => {
+    expect(getSearchPlatform('bilibili').searchEndpoint).toBe('https://search.bilibili.com/all');
+  });
+
   it('无法识别的 id 回落到默认平台，而不是抛错', () => {
     expect(getSearchPlatform('weibo').id).toBe('bilibili');
     expect(getSearchPlatform('').id).toBe('bilibili');
