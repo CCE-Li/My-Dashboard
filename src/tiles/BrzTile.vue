@@ -4,6 +4,7 @@ import DataSourceBadge from '@/components/ui/DataSourceBadge.vue';
 import PixelBar from '@/components/ui/PixelBar.vue';
 import StatBlock from '@/components/ui/StatBlock.vue';
 import TileFrame from '@/components/ui/TileFrame.vue';
+import { APP_CONFIG } from '@/config/app.config';
 import { useBrzStore } from '@/stores/useBrzStore';
 import { useToastStore } from '@/stores/useToastStore';
 import { formatCents, formatInteger, formatPercent } from '@/utils/format';
@@ -11,6 +12,9 @@ import { formatIsoLocal } from '@/utils/time';
 
 const store = useBrzStore();
 const toast = useToastStore();
+
+/** BRZ-Fund 应用地址，取自集中配置 */
+const appUrl = APP_CONFIG.brzFund.appUrl;
 
 const showPanel = ref(false);
 const importing = ref(false);
@@ -183,6 +187,7 @@ onMounted(() => {
     <template #footer>
       <span>{{ sourceLabel }}</span>
       <span class="brz-actions">
+        <a class="text-link" :href="appUrl" title="打开 BRZ-Fund 管理账本">[BRZ-FUND ↗]</a>
         <button type="button" class="text-link" @click="openPanel">[CONFIG]</button>
         <button
           type="button"
@@ -323,6 +328,12 @@ onMounted(() => {
 
 .brz-actions {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-3);
+}
+
+.brz-actions a {
+  text-underline-offset: 2px;
 }
 </style>

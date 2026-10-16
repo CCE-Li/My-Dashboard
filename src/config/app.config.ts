@@ -38,5 +38,7 @@ export const APP_CONFIG = {
     settingsId: 'app',
     /** BRZ-Fund 备份信封的标识，用于校验导入文件 */
     backupAppId: 'brz-fund',
+    /** BRZ-Fund 应用地址（Hash 路由，磁贴上的跳转按钮指向这里） */
+    appUrl: 'https://cce-li.github.io/BRZ-Fund/#/dashboard',
   },
 } as const;
