@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-10-16T13:20:26.636Z",
+  "generatedAt": "2026-10-18T22:44:55.623Z",
   "source": "~/.commandcode",
-  "sessionFiles": 49,
+  "sessionFiles": 51,
   "totals": {
-    "requests": 3835,
-    "inputTokens": 932427655,
-    "outputTokens": 4742030,
-    "cacheReadTokens": 900890255,
+    "requests": 4053,
+    "inputTokens": 1009407195,
+    "outputTokens": 5001288,
+    "cacheReadTokens": 975009295,
     "cacheWriteTokens": 273355,
-    "costUsd": 21.90352
+    "costUsd": 22.550324
   },
   "byModel": [
     {
       "model": "deepseek/deepseek-v4.1-flash",
-      "requests": 2633,
-      "inputTokens": 703907158,
-      "outputTokens": 3500286,
-      "cacheReadTokens": 683102464,
+      "requests": 2821,
+      "inputTokens": 770559008,
+      "outputTokens": 3719860,
+      "cacheReadTokens": 747610752,
       "cacheWriteTokens": 0,
-      "costUsd": 7.270183
+      "costUsd": 7.916987
     },
     {
       "model": "deepseek/deepseek-v4-flash",
@@ -37,6 +37,15 @@
       "cacheReadTokens": 18501903,
       "cacheWriteTokens": 273355,
       "costUsd": 11.737095
+    },
+    {
+      "model": "deepseek/deepseek-flash",
+      "requests": 30,
+      "inputTokens": 10327690,
+      "outputTokens": 39684,
+      "cacheReadTokens": 9610752,
+      "cacheWriteTokens": 0,
+      "costUsd": 0
     }
   ],
   "byDay": [
@@ -144,35 +153,35 @@
     },
     {
       "day": "2026-10-16",
-      "requests": 586,
-      "totalTokens": 81455797,
-      "costUsd": 0.8918603759999996
+      "requests": 774,
+      "totalTokens": 148327221,
+      "costUsd": 1.538663939999999
+    },
+    {
+      "day": "2026-10-18",
+      "requests": 4,
+      "totalTokens": 981276,
+      "costUsd": 0
+    },
+    {
+      "day": "2026-10-19",
+      "requests": 26,
+      "totalTokens": 9386098,
+      "costUsd": 0
     }
   ],
   "byHour": [
     {
-      "hour": "2026-10-16T15",
-      "requests": 243,
-      "totalTokens": 19351132,
-      "costUsd": 0.384491
+      "hour": "2026-10-18T22",
+      "requests": 4,
+      "totalTokens": 981276,
+      "costUsd": 0
     },
     {
-      "hour": "2026-10-16T16",
-      "requests": 140,
-      "totalTokens": 20141976,
-      "costUsd": 0.163741
-    },
-    {
-      "hour": "2026-10-16T17",
-      "requests": 185,
-      "totalTokens": 36209995,
-      "costUsd": 0.263605
-    },
-    {
-      "hour": "2026-10-16T18",
-      "requests": 18,
-      "totalTokens": 5752694,
-      "costUsd": 0.080023
+      "hour": "2026-10-19T03",
+      "requests": 26,
+      "totalTokens": 9386098,
+      "costUsd": 0
     }
   ]
 }

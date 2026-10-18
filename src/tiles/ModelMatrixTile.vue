@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import TileFrame from '@/components/ui/TileFrame.vue';
-import { useToastStore } from '@/stores/useToastStore';
+import { useUiStore } from '@/stores/useUiStore';
 import { useUsageStore } from '@/stores/useUsageStore';
 import { formatInteger, formatTokens, formatUsd } from '@/utils/format';
 import type { QuotaBar } from '@/types/usage';
 
 const store = useUsageStore();
-const toast = useToastStore();
+const ui = useUiStore();
 
 /** 只展示占比最高的若干个模型，其余合并，避免磁贴被长列表撑爆。 */
 const MAX_ROWS = 5;
@@ -26,9 +26,6 @@ const cycleLabel = computed(() => {
   return `CYCLE: ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 });
 
-const showQuotaConfig = ref(false);
-const draft = ref({ tokens5h: 0, tokens24h: 0, creditUsd: 0 });
-
 const ROW_COLORS = ['var(--accent-purple)', 'var(--accent-cyan)', 'var(--accent)', 'var(--accent-pink)'];
 
 function colorFor(index: number): string {
@@ -45,17 +42,6 @@ function toneFor(bar: QuotaBar): string {
 
 function formatAmount(bar: QuotaBar, value: number): string {
   return bar.unit === 'usd' ? formatUsd(value) : formatTokens(value);
-}
-
-function toggleQuotaConfig(): void {
-  showQuotaConfig.value = !showQuotaConfig.value;
-  draft.value = { ...store.quota };
-}
-
-function saveQuota(): void {
-  store.saveQuota(draft.value);
-  showQuotaConfig.value = false;
-  toast.push('QUOTA_SAVED: 配额已保存到本机');
 }
 </script>
 
@@ -88,29 +74,6 @@ function saveQuota(): void {
             <em class="quota__unset">未设配额</em>
           </template>
         </span>
-      </div>
-    </div>
-
-    <div v-if="showQuotaConfig" class="quota-config">
-      <p class="quota-config__note">
-        配额是进度条的分母，需要你自己填：官方没有查询额度的接口，
-        本地会话快照只有用量没有额度。填 0 表示不显示该条进度。
-      </p>
-      <label class="quota-config__field">
-        <span>5H 窗口 token 配额</span>
-        <input v-model.number="draft.tokens5h" type="number" min="0" class="sharp-input" />
-      </label>
-      <label class="quota-config__field">
-        <span>24H 窗口 token 配额</span>
-        <input v-model.number="draft.tokens24h" type="number" min="0" class="sharp-input" />
-      </label>
-      <label class="quota-config__field">
-        <span>总充值额度（USD）</span>
-        <input v-model.number="draft.creditUsd" type="number" min="0" step="0.01" class="sharp-input" />
-      </label>
-      <div class="quota-config__actions">
-        <button type="button" class="sharp-btn" @click="saveQuota">APPLY_CONFIG</button>
-        <button type="button" class="sharp-btn" @click="showQuotaConfig = false">CANCEL</button>
       </div>
     </div>
 
@@ -167,7 +130,7 @@ function saveQuota(): void {
 
     <template #footer>
       <span>配额需自行配置 · 官方无额度接口</span>
-      <button type="button" class="text-link" @click="toggleQuotaConfig">[CONFIG]</button>
+      <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
     </template>
   </TileFrame>
 </template>
@@ -213,40 +176,6 @@ function saveQuota(): void {
 .quota__unset {
   color: var(--text-faint) !important;
   font-weight: 400 !important;
-}
-
-.quota-config {
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.quota-config__note {
-  margin: 0;
-  font-size: 0.5625rem;
-  color: var(--text-faint);
-  line-height: 1.6;
-}
-
-.quota-config__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  font-size: 0.5625rem;
-  color: var(--text-dim);
-}
-
-.quota-config__actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.quota-config__actions .sharp-btn {
-  flex: 1;
 }
 
 .matrix {

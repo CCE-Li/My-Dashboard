@@ -52,6 +52,8 @@
   --atmosphere-image: none;
   --atmosphere-opacity: 0;
   --text-glow: none;
+  /* Simplex 噪点层的不透明度；只有 simplex 主题会打开 */
+  --noise-opacity: 0;
 
   /* 字体 */
   --font-mono: 'JetBrains Mono', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
@@ -162,4 +164,45 @@
   --atmosphere-opacity: 1;
   /* 荧光粉的晕开效果 */
   --text-glow: 0 0 6px rgba(255, 210, 74, 0.28);
+}
+
+/* ---------- SIMPLEX：石墨冷调 + 噪声颗粒 ---------- */
+[data-theme='simplex'] {
+  --bg-base: #0a0c0f;
+  --bg-surface: #101419;
+  --bg-sunken: #06080a;
+  --bg-raised: #171d24;
+  --bg-hover-accent: #1b2430;
+  --bg-focus: #0c1015;
+
+  --border: #232c36;
+  --border-strong: #34414f;
+  --border-subtle: #182028;
+  --border-track: #232c36;
+  --border-fill: #141a21;
+
+  --text-primary: #eaf2fb;
+  --text-body: #c3d1e0;
+  --text-dim: #7f90a3;
+  --text-faint: #566575;
+
+  --accent: #7ad7c8;
+  --accent-soft: rgba(122, 215, 200, 0.14);
+  --accent-pink: #ff8fa3;
+  --accent-cyan: #8ab4f8;
+  --accent-purple: #a78bfa;
+
+  --on-accent: #04100e;
+  --btn-text: #dbe7f3;
+  --warn: #f5c86b;
+
+  --track-soft: rgba(122, 215, 200, 0.07);
+  --track-strong: rgba(122, 215, 200, 0.18);
+
+  /* 噪点由 canvas 单独绘制（见 NoiseBackdrop），这里不放 CSS 渐变。
+     数值必须很低：颗粒是氛围，不该盖住内容 */
+  --atmosphere-image: none;
+  --atmosphere-opacity: 0;
+  --text-glow: none;
+  --noise-opacity: 0.09;
 }

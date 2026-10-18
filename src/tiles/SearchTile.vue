@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import TileFrame from '@/components/ui/TileFrame.vue';
-import {
-  buildSearchUrl,
-  DEFAULT_SEARCH_PLATFORM,
-  getSearchPlatform,
-  isSearchPlatformId,
-  SEARCH_PLATFORMS,
-  type SearchPlatformId,
-} from '@/config/searchPlatforms';
-import { readText, STORAGE_KEYS, writeText } from '@/services/storage';
+import { buildSearchUrl } from '@/config/searchPlatforms';
+import { useSearchStore } from '@/stores/useSearchStore';
+import { useUiStore } from '@/stores/useUiStore';
 
 interface QuickTag {
   label: string;
@@ -24,17 +18,9 @@ const QUICK_TAGS: readonly QuickTag[] = [
   { label: 'DEEPSEEK', keyword: 'DeepSeek' },
 ];
 
-const stored = readText(STORAGE_KEYS.searchPlatform, DEFAULT_SEARCH_PLATFORM);
-const platformId = ref<SearchPlatformId>(
-  isSearchPlatformId(stored) ? stored : DEFAULT_SEARCH_PLATFORM,
-);
-
-const platform = computed(() => getSearchPlatform(platformId.value));
-
-function selectPlatform(id: SearchPlatformId): void {
-  platformId.value = id;
-  writeText(STORAGE_KEYS.searchPlatform, id);
-}
+const search = useSearchStore();
+const ui = useUiStore();
+const platform = computed(() => search.platform);
 
 function tagUrl(keyword: string): string {
   return buildSearchUrl(platform.value, keyword);
@@ -51,19 +37,11 @@ function tagUrl(keyword: string): string {
     :site-url="platform.homeUrl"
     :site-label="`${platform.label} 官网`"
   >
-    <div class="platform-picker">
-      <span class="platform-picker__label">PLATFORM:</span>
-      <button
-        v-for="item in SEARCH_PLATFORMS"
-        :key="item.id"
-        type="button"
-        class="platform-picker__option"
-        :class="{ 'platform-picker__option--active': item.id === platformId }"
-        :aria-pressed="item.id === platformId"
-        :title="`改用 ${item.label} 搜索`"
-        @click="selectPlatform(item.id)"
-      >
-        [{{ item.label }}]
+    <div class="platform-bar">
+      <span class="platform-bar__label">PLATFORM:</span>
+      <span class="platform-bar__current">{{ platform.label }}</span>
+      <button type="button" class="platform-bar__link" @click="ui.openSettings()">
+        [CHANGE]
       </button>
     </div>
 
@@ -104,43 +82,39 @@ function tagUrl(keyword: string): string {
 </template>
 
 <style scoped>
-.platform-picker {
+.platform-bar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-bottom: var(--space-3);
   font-size: 0.6875rem;
 }
 
-.platform-picker__label {
+.platform-bar__label {
   color: var(--text-faint);
-  margin-right: var(--space-1);
 }
 
-.platform-picker__option {
+.platform-bar__current {
+  color: var(--accent-pink);
+  font-weight: 700;
+  border: 1px solid var(--accent-pink);
+  padding: 0.0625rem 0.25rem;
+}
+
+.platform-bar__link {
   background: none;
-  border: 1px solid transparent;
-  color: var(--text-dim);
+  border: none;
+  padding: 0;
   font-family: inherit;
   font-size: inherit;
   letter-spacing: inherit;
-  padding: 0.125rem 0.25rem;
+  color: var(--text-dim);
+  text-decoration: underline;
   cursor: pointer;
-  transition:
-    color var(--transition-instant),
-    border-color var(--transition-instant);
 }
 
-.platform-picker__option:hover {
+.platform-bar__link:hover {
   color: var(--accent-pink);
-  border-color: var(--border-strong);
-}
-
-.platform-picker__option--active {
-  color: var(--accent-pink);
-  border-color: var(--accent-pink);
-  font-weight: 700;
 }
 
 .search-form {

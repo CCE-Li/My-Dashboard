@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import DataSourceBadge from '@/components/ui/DataSourceBadge.vue';
 import StatBlock from '@/components/ui/StatBlock.vue';
 import TileFrame from '@/components/ui/TileFrame.vue';
@@ -7,14 +7,13 @@ import { APP_CONFIG } from '@/config/app.config';
 import { normalizeHandle } from '@/services/codeforcesApi';
 import { useCodeforcesStore } from '@/stores/useCodeforcesStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useUiStore } from '@/stores/useUiStore';
 import { formatInteger, formatRank } from '@/utils/format';
 import { formatRelativeFromSeconds } from '@/utils/time';
 
 const store = useCodeforcesStore();
 const toast = useToastStore();
-
-const showConfig = ref(false);
-const draft = ref(store.handle);
+const ui = useUiStore();
 
 const displayHandle = computed(() => {
   const normalized = normalizeHandle(store.handle);
@@ -42,23 +41,6 @@ const syncLabel = computed(() => {
 const solvedNote = computed(() =>
   store.stats ? `窗口内 ${formatInteger(store.stats.windowSize)} 次提交` : '',
 );
-
-function toggleConfig(): void {
-  showConfig.value = !showConfig.value;
-  draft.value = store.handle;
-}
-
-function applyHandle(): void {
-  const next = normalizeHandle(draft.value);
-  if (!next) {
-    toast.push('HANDLE_EMPTY: 请输入 Codeforces handle');
-    return;
-  }
-  store.setHandle(next);
-  showConfig.value = false;
-  toast.push(`HANDLE_SAVED: @${next}`);
-  void store.sync(true);
-}
 
 async function sync(): Promise<void> {
   await store.sync(true);
@@ -127,29 +109,17 @@ onMounted(() => {
       {{ formatRelativeFromSeconds(store.stats.lastSubmissionAt) }}
     </p>
 
-    <div v-if="showConfig" class="cf-config">
-      <label class="metric-label" for="cf-handle-input">CODEFORCES HANDLE:</label>
-      <input
-        id="cf-handle-input"
-        v-model="draft"
-        type="text"
-        class="sharp-input"
-        placeholder="your-handle"
-        @keyup.enter="applyHandle"
-      />
-      <div class="cf-config__actions">
-        <button type="button" class="sharp-btn" @click="applyHandle">APPLY_CONFIG</button>
-        <button type="button" class="sharp-btn" @click="showConfig = false">CANCEL</button>
-      </div>
-      <p class="cf-hint">handle 只保存在本机 localStorage，不会写进仓库。</p>
-    </div>
+    <p v-if="!store.isConfigured" class="cf-hint">
+      还没有设置 handle。
+      <button type="button" class="text-link" @click="ui.openSettings()">[去设置里填写]</button>
+    </p>
 
     <p v-if="store.error" class="cf-error">{{ store.error }}</p>
 
     <template #footer>
       <span>{{ syncLabel }}</span>
       <span class="cf-actions">
-        <button type="button" class="text-link" @click="toggleConfig">[CONFIG]</button>
+        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
         <button
           type="button"
           class="text-link text-link--cyan"
@@ -221,25 +191,6 @@ onMounted(() => {
   border-left: 2px solid var(--accent-pink);
   padding-left: var(--space-2);
   line-height: 1.5;
-}
-
-.cf-config {
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.cf-config__actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.cf-config__actions .sharp-btn {
-  flex: 1;
 }
 
 .cf-actions {

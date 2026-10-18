@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import DataSourceBadge from '@/components/ui/DataSourceBadge.vue';
 import PixelBar from '@/components/ui/PixelBar.vue';
 import StatBlock from '@/components/ui/StatBlock.vue';
@@ -7,18 +7,16 @@ import TileFrame from '@/components/ui/TileFrame.vue';
 import { APP_CONFIG } from '@/config/app.config';
 import { useBrzStore } from '@/stores/useBrzStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useUiStore } from '@/stores/useUiStore';
 import { formatCents, formatInteger, formatPercent } from '@/utils/format';
 import { formatIsoLocal } from '@/utils/time';
 
 const store = useBrzStore();
 const toast = useToastStore();
+const ui = useUiStore();
 
 /** BRZ-Fund 应用地址，取自集中配置 */
 const appUrl = APP_CONFIG.brzFund.appUrl;
-
-const showPanel = ref(false);
-const importing = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
 
 const snapshot = computed(() => store.snapshot);
 
@@ -40,10 +38,6 @@ const gapLabel = computed(() =>
   snapshot.value ? formatCents(snapshot.value.gap, snapshot.value.currency) : '—',
 );
 
-function openPanel(): void {
-  showPanel.value = !showPanel.value;
-}
-
 async function refresh(): Promise<void> {
   await store.load();
   if (snapshot.value?.origin === 'indexeddb') {
@@ -51,32 +45,6 @@ async function refresh(): Promise<void> {
   } else if (store.unavailable) {
     toast.push('BRZ_FUND_UNAVAILABLE: 已退化为导入快照');
   }
-}
-
-function pickFile(): void {
-  fileInput.value?.click();
-}
-
-async function onFileChange(event: Event): Promise<void> {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  input.value = '';
-  if (!file) return;
-
-  importing.value = true;
-  const failure = await store.importBackup(file);
-  importing.value = false;
-
-  if (failure) {
-    toast.push(`BRZ_IMPORT_FAILED: ${failure}`);
-  } else {
-    toast.push(`BRZ_BACKUP_IMPORTED: ${file.name}`);
-  }
-}
-
-function clearImport(): void {
-  store.removeImportedBackup();
-  toast.push('BRZ_IMPORT_CLEARED: 已移除导入的快照');
 }
 
 onMounted(() => {
@@ -153,55 +121,17 @@ onMounted(() => {
       <p class="brz-empty__detail">
         {{ store.unavailable ?? '正在读取同源 IndexedDB…' }}
       </p>
+      <button type="button" class="text-link" @click="ui.openSettings()">
+        [去设置里导入备份]
+      </button>
     </div>
-
-    <div v-if="showPanel" class="brz-panel">
-      <p class="brz-panel__line">来源：{{ sourceLabel }}</p>
-      <p v-if="store.importMeta" class="brz-panel__line">
-        快照文件：{{ store.importMeta.fileName }}（{{ formatIsoLocal(store.importMeta.importedAt) }}）
-      </p>
-      <p v-if="store.unavailable" class="brz-panel__warn">{{ store.unavailable }}</p>
-
-      <div class="brz-panel__actions">
-        <button type="button" class="sharp-btn" :disabled="importing" @click="pickFile">
-          {{ importing ? 'IMPORTING...' : 'IMPORT_BACKUP' }}
-        </button>
-        <button type="button" class="sharp-btn" @click="refresh">RE_READ</button>
-        <button
-          v-if="store.importMeta"
-          type="button"
-          class="sharp-btn"
-          @click="clearImport"
-        >
-          CLEAR
-        </button>
-      </div>
-
-      <p class="brz-panel__hint">
-        同源直读需要仪表盘与 BRZ-Fund 部署在同一域名下（如 cce-li.github.io）。
-        不同源时，把 BRZ-Fund 设置页导出的 JSON 备份导入这里即可。
-      </p>
-    </div>
-
-    <input
-      ref="fileInput"
-      type="file"
-      accept="application/json,.json"
-      class="sr-only"
-      @change="onFileChange"
-    />
 
     <template #footer>
       <span>{{ sourceLabel }}</span>
       <span class="brz-actions">
         <a class="text-link" :href="appUrl" title="打开 BRZ-Fund 管理账本">[BRZ-FUND ↗]</a>
-        <button type="button" class="text-link" @click="openPanel">[CONFIG]</button>
-        <button
-          type="button"
-          class="text-link"
-          :disabled="store.isBusy"
-          @click="refresh"
-        >
+        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+        <button type="button" class="text-link" :disabled="store.isBusy" @click="refresh">
           {{ store.isBusy ? '[READING...]' : '[SYNC]' }}
         </button>
       </span>
@@ -276,6 +206,10 @@ onMounted(() => {
 
 .brz-empty {
   padding: var(--space-4) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
 }
 
 .brz-empty__title {
@@ -286,50 +220,9 @@ onMounted(() => {
 }
 
 .brz-empty__detail {
-  margin: var(--space-2) 0 0;
-  font-size: 0.625rem;
-  color: var(--text-dim);
-  line-height: 1.6;
-}
-
-.brz-panel {
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-sunken);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.brz-panel__line {
   margin: 0;
   font-size: 0.625rem;
   color: var(--text-dim);
-  font-family: var(--font-mono);
-}
-
-.brz-panel__warn {
-  margin: 0;
-  font-size: 0.625rem;
-  color: var(--accent-pink);
-  line-height: 1.5;
-}
-
-.brz-panel__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.brz-panel__actions .sharp-btn {
-  flex: 1 1 6rem;
-}
-
-.brz-panel__hint {
-  margin: 0;
-  font-size: 0.5625rem;
-  color: var(--text-faint);
   line-height: 1.6;
 }
 

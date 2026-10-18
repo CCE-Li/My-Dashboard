@@ -6,7 +6,7 @@
  * 否则换主题时那一处不会跟着变。
  */
 
-export type ThemeId = 'cyberpunk' | 'bladerunner' | 'vt220';
+export type ThemeId = 'cyberpunk' | 'bladerunner' | 'vt220' | 'simplex';
 
 export interface ThemeDefinition {
   id: ThemeId;
@@ -36,6 +36,12 @@ export const THEMES: readonly ThemeDefinition[] = [
     label: 'VT220',
     description: 'DEC VT220 终端：深色屏幕上的黄色荧光字，带扫描线',
     themeColor: '#0a0d08',
+  },
+  {
+    id: 'simplex',
+    label: 'SIMPLEX',
+    description: 'Simplex 噪声：石墨冷调底 + 程序生成的胶片颗粒纹理',
+    themeColor: '#0a0c0f',
   },
 ];
 

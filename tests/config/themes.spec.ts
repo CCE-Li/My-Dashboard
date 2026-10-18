@@ -7,10 +7,11 @@ describe('主题清单', () => {
     expect(getTheme(DEFAULT_THEME).label).toBe('CYBERPUNK');
   });
 
-  it('包含用户指定的两种风格', () => {
+  it('包含用户指定的三种风格', () => {
     const ids = THEMES.map((theme) => theme.id);
     expect(ids).toContain('bladerunner');
     expect(ids).toContain('vt220');
+    expect(ids).toContain('simplex');
   });
 
   it('id 唯一、标签与说明非空、themeColor 是合法 hex', () => {
@@ -41,12 +42,13 @@ describe('nextTheme', () => {
   it('按顺序前后切换', () => {
     expect(nextTheme('cyberpunk', 1)).toBe('bladerunner');
     expect(nextTheme('bladerunner', 1)).toBe('vt220');
-    expect(nextTheme('vt220', -1)).toBe('bladerunner');
+    expect(nextTheme('vt220', 1)).toBe('simplex');
+    expect(nextTheme('simplex', -1)).toBe('vt220');
   });
 
   it('到边界后钳制，不会绕回', () => {
     expect(nextTheme('cyberpunk', -1)).toBe('cyberpunk');
-    expect(nextTheme('vt220', 1)).toBe('vt220');
+    expect(nextTheme('simplex', 1)).toBe('simplex');
   });
 
   it('起点是脏数据时从默认主题开始走', () => {
