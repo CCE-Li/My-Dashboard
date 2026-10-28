@@ -13,6 +13,7 @@ import {
   fetchPositionRisk,
   fetchServerTimeOffset,
   fetchTicker24h,
+  fetchEgressIp,
   normalizeBaseUrl,
   selfCheck,
   type BinancePingStep,
@@ -53,6 +54,8 @@ export const useBinanceStore = defineStore('binance', () => {
   const error = ref<string | null>(null);
   const positionsError = ref<string | null>(null);
   const fetchedAt = ref<number | null>(null);
+  /** 本机出口 IP 的参考值（用于对照币安 IP 白名单） */
+  const egressIp = ref<string | null>(null);
 
   const hasCredentials = computed(
     () => apiKey.value.trim().length > 0 && apiSecret.value.trim().length > 0,
@@ -184,7 +187,9 @@ export const useBinanceStore = defineStore('binance', () => {
   }
 
   /** 三步自检：可达性 → 公开读 → 鉴权。用来定位「连不上」卡在哪。 */
-  function runSelfCheck(): Promise<BinancePingStep[]> {
+  async function runSelfCheck(): Promise<BinancePingStep[]> {
+    // 白名单排错需要知道"币安看到的是哪个 IP"，顺手一起取
+    egressIp.value = await fetchEgressIp();
     return selfCheck(apiKey.value, apiSecret.value, apiBase.value);
   }
 
@@ -215,6 +220,7 @@ export const useBinanceStore = defineStore('binance', () => {
     error,
     positionsError,
     fetchedAt,
+    egressIp,
     hasCredentials,
     isBusy,
     summary,

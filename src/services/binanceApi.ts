@@ -267,6 +267,26 @@ export interface BinancePingStep {
   detail: string;
 }
 
+/**
+ * 查本机出口 IP。
+ *
+ * 用途：币安 -2015 的报错**不会**告诉你它看到的请求 IP，而 IP 白名单又必须填那个值。
+ * 这里借第三方回显服务取出一个参考值 —— 注意若你的网络按域名分流代理，
+ * 这个 IP 可能与币安实际看到的不同（那就以代理的出口 IP 为准）。
+ */
+export async function fetchEgressIp(): Promise<string | null> {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json', {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { ip?: unknown };
+    return typeof payload.ip === 'string' ? payload.ip : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function selfCheck(
   apiKey: string,
   secret: string,

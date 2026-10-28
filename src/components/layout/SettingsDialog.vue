@@ -199,6 +199,17 @@ const STEP_LABELS: Record<string, string> = {
   auth: '3. 鉴权',
 };
 
+async function copyEgressIp(): Promise<void> {
+  const ip = binance.egressIp;
+  if (!ip) return;
+  try {
+    await navigator.clipboard.writeText(ip);
+    toast.push(`IP_COPIED: ${ip}`);
+  } catch {
+    toast.push('IP_COPY_FAILED: 浏览器拒绝了剪贴板访问，请手动选中复制');
+  }
+}
+
 function pickBackup(): void {
   fileInput.value?.click();
 }
@@ -498,6 +509,23 @@ function resetLayout(): void {
               </li>
             </ul>
 
+            <p v-if="binance.egressIp" class="settings-egress">
+              本机出口 IP：<strong>{{ binance.egressIp }}</strong>
+              <button
+                type="button"
+                class="text-link"
+                :title="`把这个 IP 加到币安 API 的 IP 白名单里`"
+                @click="copyEgressIp"
+              >
+                [复制]
+              </button>
+              <br />
+              <span class="settings-egress__hint">
+                币安 -2015 的报错不会告诉你它看到的 IP，请用这个值填白名单；
+                若你通过代理/VPN 访问币安，要填的是<strong>代理的出口 IP</strong>。
+              </span>
+            </p>
+
             <label class="field">
               <span class="field__label">观察列表（逗号分隔，最多 8 个）</span>
               <input
@@ -772,6 +800,33 @@ function resetLayout(): void {
   font-size: 0.5625rem;
   font-family: var(--font-mono);
   line-height: 1.6;
+}
+
+.settings-egress {
+  margin: 0;
+  padding: var(--space-2);
+  border: 1px dashed var(--border-strong);
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  color: var(--text-body);
+  line-height: 1.7;
+}
+
+.settings-egress strong {
+  color: var(--accent);
+}
+
+.settings-egress__hint {
+  display: inline-block;
+  margin-top: var(--space-1);
+  font-size: 0.5625rem;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  line-height: 1.6;
+}
+
+.settings-egress__hint strong {
+  color: var(--text-dim);
 }
 
 .settings-result {
