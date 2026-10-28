@@ -1,4 +1,5 @@
 import type { TileDefinition, TileId } from '@/types/dashboard';
+import BinanceTile from './BinanceTile.vue';
 import BrzTile from './BrzTile.vue';
 import CodeforcesTile from './CodeforcesTile.vue';
 import ModelMatrixTile from './ModelMatrixTile.vue';
@@ -46,6 +47,12 @@ export const TILES: readonly TileDefinition[] = [
     span: 'wide',
     label: '模型用量矩阵',
     component: ModelMatrixTile,
+  },
+  {
+    id: 'binance',
+    span: 'wide',
+    label: '币安合约持仓',
+    component: BinanceTile,
   },
 ];
 

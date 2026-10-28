@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { normalizeHandle } from '@/services/codeforcesApi';
+import { useBinanceStore } from '@/stores/useBinanceStore';
 import { useBrzStore } from '@/stores/useBrzStore';
 import { useCodeforcesStore } from '@/stores/useCodeforcesStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
@@ -19,6 +20,7 @@ const searchStore = useSearchStore();
 const codeforces = useCodeforcesStore();
 const usage = useUsageStore();
 const brz = useBrzStore();
+const binance = useBinanceStore();
 const layout = useLayoutStore();
 const toast = useToastStore();
 
@@ -26,6 +28,11 @@ const cfDraft = ref('');
 const keyDraft = ref('');
 const revealKey = ref(false);
 const quotaDraft = ref<QuotaConfig>({ tokens5h: 0, tokens24h: 0, creditUsd: 0 });
+const bnKeyDraft = ref('');
+const bnSecretDraft = ref('');
+const revealSecret = ref(false);
+const bnWatchlistDraft = ref('');
+const bnTestResult = ref<{ ok: boolean; detail: string } | null>(null);
 const importing = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -38,6 +45,11 @@ watch(
     keyDraft.value = usage.apiKey;
     revealKey.value = false;
     quotaDraft.value = { ...usage.quota };
+    bnKeyDraft.value = binance.apiKey;
+    bnSecretDraft.value = binance.apiSecret;
+    bnWatchlistDraft.value = binance.watchlist.join(', ');
+    bnTestResult.value = null;
+    revealSecret.value = false;
   },
 );
 
@@ -118,6 +130,44 @@ function saveQuota(): void {
   usage.saveQuota(quotaDraft.value);
   quotaDraft.value = { ...usage.quota };
   toast.push('QUOTA_SAVED: 配额已保存到本机');
+}
+
+function saveBinance(): void {
+  if (!bnKeyDraft.value.trim() || !bnSecretDraft.value.trim()) {
+    toast.push('BINANCE_EMPTY: API key 与 secret 都要填');
+    return;
+  }
+  binance.saveCredentials(bnKeyDraft.value, bnSecretDraft.value);
+  toast.push('BINANCE_SAVED: 已保存到本机 localStorage');
+}
+
+async function testBinance(): Promise<void> {
+  binance.saveCredentials(bnKeyDraft.value, bnSecretDraft.value);
+  bnTestResult.value = await binance.testCredentials();
+  toast.push(
+    bnTestResult.value.ok
+      ? 'BINANCE_OK: 鉴权通过'
+      : `BINANCE_FAILED: ${bnTestResult.value.detail}`,
+  );
+}
+
+function clearBinance(): void {
+  binance.clearCredentials();
+  bnKeyDraft.value = '';
+  bnSecretDraft.value = '';
+  bnTestResult.value = null;
+  toast.push('BINANCE_CLEARED: 已从本机移除');
+}
+
+async function saveBinanceWatchlist(): Promise<void> {
+  const invalid = await binance.validateSymbols(bnWatchlistDraft.value);
+  if (invalid) {
+    toast.push(`BINANCE_SYMBOLS: ${invalid}`);
+    return;
+  }
+  binance.saveWatchlist(bnWatchlistDraft.value);
+  bnWatchlistDraft.value = binance.watchlist.join(', ');
+  toast.push('BINANCE_WATCHLIST_SAVED: 观察列表已保存');
 }
 
 function pickBackup(): void {
@@ -319,6 +369,91 @@ function resetLayout(): void {
             </div>
             <p class="settings-hint">
               进度条的分母只能手填：官方没有额度查询接口。填 0 表示不显示该条。
+            </p>
+          </section>
+
+          <!-- 币安合约 -->
+          <section class="settings-group">
+            <h3 class="settings-group__title">BINANCE 合约 / U 本位</h3>
+
+            <label class="field">
+              <span class="field__label">
+                API KEY
+                <em v-if="binance.hasCredentials" class="field__saved">{{ binance.maskedKey }}</em>
+                <em v-else class="field__unset">未配置</em>
+              </span>
+              <input
+                v-model="bnKeyDraft"
+                class="sharp-input"
+                type="password"
+                placeholder="币安 API key"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+
+            <label class="field">
+              <span class="field__label">
+                API SECRET
+                <em class="field__warn">只读 key 请关闭交易与提现权限</em>
+              </span>
+              <input
+                v-model="bnSecretDraft"
+                class="sharp-input"
+                :type="revealSecret ? 'text' : 'password'"
+                placeholder="币安 API secret"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+
+            <label class="checkbox">
+              <input v-model="revealSecret" type="checkbox" />
+              <span>显示 secret 明文</span>
+            </label>
+
+            <div class="option-row">
+              <button type="button" class="sharp-btn" @click="saveBinance">SAVE</button>
+              <button type="button" class="sharp-btn" @click="testBinance">TEST</button>
+              <button
+                v-if="binance.hasCredentials"
+                type="button"
+                class="sharp-btn"
+                @click="clearBinance"
+              >
+                CLEAR
+              </button>
+            </div>
+
+            <p
+              v-if="bnTestResult"
+              class="settings-result"
+              :style="{ color: bnTestResult.ok ? 'var(--accent)' : 'var(--accent-pink)' }"
+            >
+              &gt; {{ bnTestResult.detail }}
+            </p>
+
+            <label class="field">
+              <span class="field__label">观察列表（逗号分隔，最多 8 个）</span>
+              <input
+                v-model="bnWatchlistDraft"
+                class="sharp-input"
+                type="text"
+                placeholder="BTCUSDT, ETHUSDT"
+                spellcheck="false"
+              />
+            </label>
+            <div class="option-row">
+              <button type="button" class="sharp-btn" @click="saveBinanceWatchlist">
+                保存观察列表
+              </button>
+            </div>
+
+            <p class="settings-warn">
+              ⚠️ secret 保存在本机 localStorage，并由浏览器直接签名请求。
+              这意味着它对你的账户拥有完整权限：请务必使用<strong>只读</strong> key
+              （关闭合约交易与提现）、配置 IP 白名单，且绝不要把 secret 提交到仓库。
+              持仓数据只在你自己的浏览器里，不会上传到任何第三方。
             </p>
           </section>
 
@@ -547,6 +682,20 @@ function resetLayout(): void {
 
 .settings-hint strong {
   color: var(--text-dim);
+}
+
+.settings-warn {
+  margin: 0;
+  padding: var(--space-2);
+  font-size: 0.5625rem;
+  line-height: 1.7;
+  color: var(--accent-pink);
+  border-left: 2px solid var(--accent-pink);
+}
+
+.field__warn {
+  font-style: normal;
+  color: var(--warn);
 }
 
 .settings-result {

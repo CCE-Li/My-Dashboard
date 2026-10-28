@@ -1,7 +1,7 @@
 import type { Component } from 'vue';
 
 /** 磁贴 id：作为拖拽顺序持久化的稳定键，一旦发布不得重命名。 */
-export type TileId = 'search' | 'brz' | 'usage' | 'codeforces' | 'models';
+export type TileId = 'search' | 'brz' | 'usage' | 'codeforces' | 'models' | 'binance';
 
 /** 磁贴跨列宽度。full = 整行；wide = 桌面端两列；single = 一列。 */
 export type TileSpan = 'full' | 'wide' | 'single';
