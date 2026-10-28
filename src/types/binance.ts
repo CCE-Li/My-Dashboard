@@ -1,12 +1,17 @@
 /** 币安 U 本位合约（fapi）相关的原始与派生类型。 */
 
-/** `/fapi/v1/positionRisk` 的原始返回项。数值字段都是字符串。 */
+/** `/fapi/v2|v3/positionRisk` 的原始返回项。数值字段都是字符串。 */
 export interface RawPositionRisk {
   symbol: string;
   positionAmt: string;
   entryPrice: string;
   markPrice: string;
-  unRealizedProfit: string;
+  /**
+   * 未实现盈亏。币安文档在不同版本里拼写不一致（unRealizedProfit / unrealizedProfit），
+   * 两个都声明为可选，解析时取存在的那个。
+   */
+  unRealizedProfit?: string;
+  unrealizedProfit?: string;
   liquidationPrice: string;
   leverage: string;
   marginType: string;

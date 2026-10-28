@@ -260,11 +260,15 @@ localStorage，并由浏览器用 Web Crypto 做 HMAC-SHA256 签名：
 
 ### 已知限制
 
-- 公开接口（行情/K 线）实测返回 `Access-Control-Allow-Origin: *`，浏览器可直连；
-  **私有接口的真实错误码需要有效 key 才能看到**，因此「持仓」这条链路
-  只用单元测试与鉴权失败路径验证过，未在真实账户上跑通。
-- 币安在部分地区会返回 HTML 错误页而不是 JSON，代码会识别为
-  「非 JSON 响应（可能是地域限制）」，而不是抛出难懂的解析错误。
+- 公开接口（行情/K 线）实测返回 `Access-Control-Allow-Origin: *`，浏览器可直连。
+- 持仓接口用 **`/fapi/v3/positionRisk`**，并以 `/fapi/v2/positionRisk` 兜底
+  （仅在返回非 JSON / 路径不存在时才换版本，鉴权失败会立即抛出）。
+  **`/fapi/v1/positionRisk` 已下线**——请求它会落到币安网站的 404 HTML 页，
+  看起来极像"网络/地域问题"，实际是路径写错。这一条踩过坑，已修正。
+- 持仓字段名在文档里存在 `unRealizedProfit` / `unrealizedProfit` 两种拼写，
+  解析时两者都兼容。
+- 币安在部分地区会返回 HTML 错误页而不是 JSON，代码会明确识别为
+  「非 JSON 响应」，而不是抛出难懂的解析错误。
 
 ### 配额进度条的分母为什么必须自己填
 

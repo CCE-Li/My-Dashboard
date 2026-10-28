@@ -26,55 +26,89 @@ function raw(partial: Partial<RawPositionRisk>): RawPositionRisk {
 }
 
 describe('normalizePosition', () => {
-  it('¿Õ²Ö£¨positionAmt = 0£©·µ»Ø null£¬±Ò°²»á°ÑËùÓÐ½»Ò×¶Ô¶¼·µ»ØÒ»±é', () => {
+  it('ç©ºä»“ï¼ˆpositionAmt = 0ï¼‰è¿”å›ž nullï¼Œå¸å®‰ä¼šæŠŠæ‰€æœ‰äº¤æ˜“å¯¹éƒ½è¿”å›žä¸€é', () => {
     expect(normalizePosition(raw({ positionAmt: '0' }))).toBeNull();
   });
 
-  it('ÕýÊýÎª¶àÍ·£¬¸ºÊýÎª¿ÕÍ·£¬ÊýÁ¿È¡¾ø¶ÔÖµ', () => {
+  it('æ­£æ•°ä¸ºå¤šå¤´ï¼Œè´Ÿæ•°ä¸ºç©ºå¤´ï¼Œæ•°é‡å–ç»å¯¹å€¼', () => {
     const long = normalizePosition(
-      raw({ positionAmt: '0.5', entryPrice: '60000', markPrice: '62000', notional: '31000', unRealizedProfit: '1000' }),
+      raw({
+        positionAmt: '0.5',
+        entryPrice: '60000',
+        markPrice: '62000',
+        notional: '31000',
+        unRealizedProfit: '1000',
+      }),
     );
     expect(long).toMatchObject({ side: 'LONG', amount: 0.5 });
 
     const short = normalizePosition(
-      raw({ positionAmt: '-0.5', entryPrice: '60000', markPrice: '58000', notional: '29000', unRealizedProfit: '1000' }),
+      raw({
+        positionAmt: '-0.5',
+        entryPrice: '60000',
+        markPrice: '58000',
+        notional: '29000',
+        unRealizedProfit: '1000',
+      }),
     );
     expect(short).toMatchObject({ side: 'SHORT', amount: 0.5 });
   });
 
-  it('ROE = Ó¯¿÷ / ±£Ö¤½ð£¬±£Ö¤½ð = ÃûÒå¼ÛÖµ / ¸Ü¸Ë', () => {
-    // ÃûÒå 10000¡¢10x ¡ú ±£Ö¤½ð 1000£»Ó¯¿÷ 100 ¡ú ROE 10%
+  it('ROE = ç›ˆäº / ä¿è¯é‡‘ï¼Œä¿è¯é‡‘ = åä¹‰ä»·å€¼ / æ æ†', () => {
+    // åä¹‰ 10000ã€10x â†’ ä¿è¯é‡‘ 1000ï¼›ç›ˆäº 100 â†’ ROE 10%
     const position = normalizePosition(
-      raw({ positionAmt: '1', markPrice: '10000', notional: '10000', leverage: '10', unRealizedProfit: '100' }),
+      raw({
+        positionAmt: '1',
+        markPrice: '10000',
+        notional: '10000',
+        leverage: '10',
+        unRealizedProfit: '100',
+      }),
     );
     expect(position?.roePercent).toBeCloseTo(10, 6);
   });
 
-  it('ÃûÒå¼ÛÖµÈ±Ê§Ê±ÓÃ ÊýÁ¿ ¡Á ±ê¼Ç¼Û ¶µµ×', () => {
+  it('åä¹‰ä»·å€¼ç¼ºå¤±æ—¶ç”¨ æ•°é‡ Ã— æ ‡è®°ä»· å…œåº•', () => {
     const position = normalizePosition(
       raw({ positionAmt: '2', markPrice: '100', notional: '', unRealizedProfit: '0', leverage: '5' }),
     );
     expect(position?.notional).toBe(200);
   });
 
-  it('¸Ü¸ËÎª 0 »òÈ±Ê§Ê±°´ 1 ´¦Àí£¬²»»á³ýÁã', () => {
+  it('æ æ†ä¸º 0 æˆ–ç¼ºå¤±æ—¶æŒ‰ 1 å¤„ç†ï¼Œä¸ä¼šé™¤é›¶', () => {
     const position = normalizePosition(
       raw({ positionAmt: '1', markPrice: '100', notional: '100', leverage: '0', unRealizedProfit: '10' }),
     );
     expect(Number.isFinite(position?.roePercent ?? Number.NaN)).toBe(true);
   });
 
-  it('×Ö·û´®ÊýÖµ±»ÕýÈ·½âÎö£¬ÔàÖµÍË»¯Îª 0', () => {
+  it('å­—ç¬¦ä¸²æ•°å€¼è¢«æ­£ç¡®è§£æžï¼Œè„å€¼é€€åŒ–ä¸º 0', () => {
     const position = normalizePosition(
       raw({ positionAmt: '1', markPrice: 'abc', entryPrice: '100', notional: '100', unRealizedProfit: '5' }),
     );
     expect(position?.markPrice).toBe(0);
     expect(position?.entryPrice).toBe(100);
   });
+
+  it('å…¼å®¹ unrealizedProfit çš„å°å†™æ‹¼å†™ï¼ˆä¸åŒæŽ¥å£ç‰ˆæœ¬å­—æ®µåä¸ä¸€è‡´ï¼‰', () => {
+    const position = normalizePosition({
+      symbol: 'BTCUSDT',
+      positionAmt: '1',
+      entryPrice: '100',
+      markPrice: '110',
+      unrealizedProfit: '42',
+      liquidationPrice: '0',
+      leverage: '10',
+      marginType: 'cross',
+      positionSide: 'BOTH',
+      notional: '110',
+    });
+    expect(position?.unrealizedPnl).toBe(42);
+  });
 });
 
 describe('summarizePositions', () => {
-  it('»ã×Ü×ÜÓ¯¿÷Óë¶à¿Õ/Ê¤¸º¼ÆÊý', () => {
+  it('æ±‡æ€»æ€»ç›ˆäºä¸Žå¤šç©º/èƒœè´Ÿè®¡æ•°', () => {
     const positions = [
       { symbol: 'A', side: 'LONG' as const, amount: 1, entryPrice: 1, markPrice: 2, unrealizedPnl: 10, roePercent: 1, notional: 100, leverage: 1 },
       { symbol: 'B', side: 'SHORT' as const, amount: 1, entryPrice: 1, markPrice: 2, unrealizedPnl: -4, roePercent: -1, notional: 100, leverage: 1 },
@@ -89,7 +123,7 @@ describe('summarizePositions', () => {
     });
   });
 
-  it('¿ÕÁÐ±í·µ»ØÈ« 0', () => {
+  it('ç©ºåˆ—è¡¨è¿”å›žå…¨ 0', () => {
     expect(summarizePositions([])).toEqual({
       totalPnl: 0,
       longCount: 0,
@@ -101,19 +135,19 @@ describe('summarizePositions', () => {
 });
 
 describe('changePercent', () => {
-  it('°´¿ªÅÌ¼ÛËã°Ù·Ö±È', () => {
+  it('æŒ‰å¼€ç›˜ä»·ç®—ç™¾åˆ†æ¯”', () => {
     expect(changePercent(100, 110)).toBeCloseTo(10, 6);
     expect(changePercent(100, 90)).toBeCloseTo(-10, 6);
   });
 
-  it('¿ªÅÌ¼ÛÎª 0 »ò·Ç·¨Ê±·µ»Ø 0£¬±ÜÃâ Infinity/NaN', () => {
+  it('å¼€ç›˜ä»·ä¸º 0 æˆ–éžæ³•æ—¶è¿”å›ž 0ï¼Œé¿å… Infinity/NaN', () => {
     expect(changePercent(0, 100)).toBe(0);
     expect(changePercent(Number.NaN, 100)).toBe(0);
   });
 });
 
 describe('buildSparklinePath', () => {
-  it('°´ viewBox Éú³ÉÕÛÏß£¬ÇÒ¼Û¸ñÔ½¸ß y Ô½Ð¡', () => {
+  it('æŒ‰ viewBox ç”ŸæˆæŠ˜çº¿ï¼Œä¸”ä»·æ ¼è¶Šé«˜ y è¶Šå°', () => {
     const path = buildSparklinePath([1, 2, 3], 10, 20);
     expect(path.startsWith('M ')).toBe(true);
     const coords = path
@@ -121,14 +155,14 @@ describe('buildSparklinePath', () => {
       .split(' L ')
       .map((pair) => pair.split(',').map(Number));
     expect(coords).toHaveLength(3);
-    // x µÝÔö
+    // x é€’å¢ž
     expect(coords[0]?.[0]).toBe(0);
     expect(coords[2]?.[0]).toBe(10);
-    // y µÝ¼õ£¨¼Û¸ñÉÏÕÇ ¡ú y ±äÐ¡£©
+    // y é€’å‡ï¼ˆä»·æ ¼ä¸Šæ¶¨ â†’ y å˜å°ï¼‰
     expect(coords[0]?.[1] as number).toBeGreaterThan(coords[2]?.[1] as number);
   });
 
-  it('ËùÓÐµãÏàÍ¬Ê±»­Ò»Ìõ¾ÓÖÐµÄË®Æ½Ïß£¬¶ø²»ÊÇ¿ÕÂ·¾¶', () => {
+  it('æ‰€æœ‰ç‚¹ç›¸åŒæ—¶ç”»ä¸€æ¡å±…ä¸­çš„æ°´å¹³çº¿ï¼Œè€Œä¸æ˜¯ç©ºè·¯å¾„', () => {
     const path = buildSparklinePath([5, 5, 5], 10, 20);
     expect(path).not.toBe('');
     const ys = path
@@ -139,18 +173,18 @@ describe('buildSparklinePath', () => {
     expect(ys[0]).toBeCloseTo(10, 1);
   });
 
-  it('µ¥µãÒ²ÄÜÉú³ÉÂ·¾¶', () => {
+  it('å•ç‚¹ä¹Ÿèƒ½ç”Ÿæˆè·¯å¾„', () => {
     expect(buildSparklinePath([42], 10, 20)).toContain('0.00,');
   });
 
-  it('¿ÕÊý×é»ò·Ç·¨³ß´ç·µ»Ø¿Õ×Ö·û´®', () => {
+  it('ç©ºæ•°ç»„æˆ–éžæ³•å°ºå¯¸è¿”å›žç©ºå­—ç¬¦ä¸²', () => {
     expect(buildSparklinePath([], 10, 20)).toBe('');
     expect(buildSparklinePath([1, 2], 0, 20)).toBe('');
   });
 });
 
 describe('extractCloses', () => {
-  it('È¡Ã¿¸ù K ÏßµÄµÚ 5 ÁÐ£¨ÊÕÅÌ¼Û£©', () => {
+  it('å–æ¯æ ¹ K çº¿çš„ç¬¬ 5 åˆ—ï¼ˆæ”¶ç›˜ä»·ï¼‰', () => {
     const klines = [
       [1, '1', '2', '0.5', '1.5', 0],
       [2, '1.5', '3', '1', '2.5', 0],
@@ -158,7 +192,7 @@ describe('extractCloses', () => {
     expect(extractCloses(klines)).toEqual([1.5, 2.5]);
   });
 
-  it('Ìø¹ýÊÕÅÌ¼Û·Ç·¨µÄÐÐ', () => {
+  it('è·³è¿‡æ”¶ç›˜ä»·éžæ³•çš„è¡Œ', () => {
     const klines = [
       [1, '1', '2', '0.5', 'oops', 0],
       [2, '1.5', '3', '1', '2.5', 0],
@@ -168,7 +202,7 @@ describe('extractCloses', () => {
 });
 
 describe('sortByPnlMagnitude', () => {
-  it('°´Ó¯¿÷¾ø¶ÔÖµ½µÐò£¬¸¡¿÷´óµÄÒ²ÅÅÇ°Ãæ', () => {
+  it('æŒ‰ç›ˆäºç»å¯¹å€¼é™åºï¼Œæµ®äºå¤§çš„ä¹ŸæŽ’å‰é¢', () => {
     const positions = [
       { symbol: 'A', side: 'LONG' as const, amount: 1, entryPrice: 1, markPrice: 1, unrealizedPnl: 5, roePercent: 0, notional: 1, leverage: 1 },
       { symbol: 'B', side: 'LONG' as const, amount: 1, entryPrice: 1, markPrice: 1, unrealizedPnl: -50, roePercent: 0, notional: 1, leverage: 1 },

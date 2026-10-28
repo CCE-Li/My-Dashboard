@@ -24,7 +24,8 @@ export function normalizePosition(raw: RawPositionRisk): NormalizedPosition | nu
 
   const entryPrice = toNumber(raw.entryPrice);
   const markPrice = toNumber(raw.markPrice);
-  const unrealizedPnl = toNumber(raw.unRealizedProfit);
+  // 两个版本字段拼写不同，取存在的那个
+  const unrealizedPnl = toNumber(raw.unRealizedProfit ?? raw.unrealizedProfit);
   const leverage = toNumber(raw.leverage) || 1;
   const notional = Math.abs(toNumber(raw.notional)) || Math.abs(amount * markPrice);
 

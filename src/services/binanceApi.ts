@@ -201,21 +201,45 @@ async function signedGet<T>(
   return payload as T;
 }
 
+/**
+ * 持仓接口的路径候选，按优先级尝试。
+ *
+ * 实测教训：`/fapi/v1/positionRisk` 已经下线，请求会落到币安网站的 404 HTML 页，
+ * 而不是 API 的 JSON 错误 —— 看起来非常像"网络/地域问题"，实际是路径写错。
+ * v3 是当前版本，v2 作为兜底（两者响应字段基本一致）。
+ */
+const POSITION_PATHS = ['/fapi/v3/positionRisk', '/fapi/v2/positionRisk'] as const;
+
 /** 当前持仓（含未实现盈亏）。空仓会被调用方过滤掉。 */
-export function fetchPositionRisk(
+export async function fetchPositionRisk(
   apiKey: string,
   secret: string,
   timeOffsetMs: number,
   baseUrl: string = DEFAULT_BINANCE_BASE_URL,
 ): Promise<RawPositionRisk[]> {
-  return signedGet<RawPositionRisk[]>(
-    '/fapi/v1/positionRisk',
-    {},
-    apiKey,
-    secret,
-    timeOffsetMs,
-    baseUrl,
-  );
+  let lastError: unknown = new BinanceApiError('api', '没有可用的持仓接口');
+
+  for (const path of POSITION_PATHS) {
+    try {
+      return await signedGet<RawPositionRisk[]>(
+        path,
+        {},
+        apiKey,
+        secret,
+        timeOffsetMs,
+        baseUrl,
+      );
+    } catch (error) {
+      lastError = error;
+      // 只有"路径不存在/返回非 JSON"才换下一个版本；
+      // 鉴权失败、限流等错误应立刻抛出，重试另一个路径没有意义。
+      if (!(error instanceof BinanceApiError) || error.kind !== 'non-json') {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 /** 24 小时行情（公开接口）。 */
