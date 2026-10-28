@@ -8,6 +8,7 @@ import {
   summarizePositions,
 } from '@/domain/binance';
 import type { RawPositionRisk } from '@/types/binance';
+import { extractPositions } from '@/services/binanceApi';
 
 function raw(partial: Partial<RawPositionRisk>): RawPositionRisk {
   return {
@@ -82,12 +83,13 @@ describe('normalizePosition', () => {
     expect(Number.isFinite(position?.roePercent ?? Number.NaN)).toBe(true);
   });
 
-  it('字符串数值被正确解析，脏值退化为 0', () => {
+  it('字符串数值被正确解析，脏值退化为 0 或由名义价值反算', () => {
     const position = normalizePosition(
       raw({ positionAmt: '1', markPrice: 'abc', entryPrice: '100', notional: '100', unRealizedProfit: '5' }),
     );
-    expect(position?.markPrice).toBe(0);
     expect(position?.entryPrice).toBe(100);
+    // markPrice 是脏值 → 用 notional / amount 反算出 100，而不是显示 0
+    expect(position?.markPrice).toBe(100);
   });
 
   it('兼容 unrealizedProfit 的小写拼写（不同接口版本字段名不一致）', () => {
@@ -104,6 +106,24 @@ describe('normalizePosition', () => {
       notional: '110',
     });
     expect(position?.unrealizedPnl).toBe(42);
+  });
+
+  it('没有 markPrice 时用 名义价值 / 数量 反算（/fapi/v2/account 的仓位没有该字段）', () => {
+    const position = normalizePosition({
+      symbol: 'ETHUSDT',
+      positionAmt: '-2',
+      entryPrice: '2000',
+      unRealizedProfit: '-40',
+      liquidationPrice: '0',
+      leverage: '20',
+      marginType: 'cross',
+      positionSide: 'BOTH',
+      notional: '5000',
+    });
+    expect(position?.markPrice).toBe(2500);
+    expect(position?.side).toBe('SHORT');
+    // 保证金 5000/20 = 250 → ROE -40/250 = -16%
+    expect(position?.roePercent).toBeCloseTo(-16, 6);
   });
 });
 
@@ -209,5 +229,23 @@ describe('sortByPnlMagnitude', () => {
       { symbol: 'C', side: 'LONG' as const, amount: 1, entryPrice: 1, markPrice: 1, unrealizedPnl: 20, roePercent: 0, notional: 1, leverage: 1 },
     ];
     expect(sortByPnlMagnitude(positions).map((item) => item.symbol)).toEqual(['B', 'C', 'A']);
+  });
+});
+
+describe('extractPositions', () => {
+  const one = raw({ positionAmt: '1' });
+
+  it('positionRisk 直接返回数组', () => {
+    expect(extractPositions([one])).toHaveLength(1);
+  });
+
+  it('/fapi/v2/account 把仓位放在 positions 字段里', () => {
+    expect(extractPositions({ totalWalletBalance: '100', positions: [one] })).toHaveLength(1);
+  });
+
+  it('两种形状都不是时返回空数组，不抛错', () => {
+    expect(extractPositions(null)).toEqual([]);
+    expect(extractPositions({})).toEqual([]);
+    expect(extractPositions('nope')).toEqual([]);
   });
 });

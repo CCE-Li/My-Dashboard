@@ -202,44 +202,62 @@ async function signedGet<T>(
 }
 
 /**
- * 持仓接口的路径候选，按优先级尝试。
+ * 持仓数据源，按优先级尝试。
  *
- * 实测教训：`/fapi/v1/positionRisk` 已经下线，请求会落到币安网站的 404 HTML 页，
- * 而不是 API 的 JSON 错误 —— 看起来非常像"网络/地域问题"，实际是路径写错。
- * v3 是当前版本，v2 作为兜底（两者响应字段基本一致）。
+ * - v3/v2 positionRisk：字段最全（含 markPrice），首选
+ * - v2 account：账户信息接口，内含 positions 数组（无 markPrice，但可用
+ *   notional / positionAmt 反算），作为最后兜底
+ *
+ * 之所以在**任意错误**下都继续尝试下一条：不同 key 的权限组合、
+ * 不同地区可能对个别路径返回 401 HTML 或 -2015，而换一条就能通。
+ * 全部失败时抛出信息量最大的那个错误。
  */
-const POSITION_PATHS = ['/fapi/v3/positionRisk', '/fapi/v2/positionRisk'] as const;
+const POSITION_SOURCES = [
+  '/fapi/v3/positionRisk',
+  '/fapi/v2/positionRisk',
+  '/fapi/v2/account',
+] as const;
+
+export interface PositionFetchResult {
+  positions: RawPositionRisk[];
+  /** 实际生效的路径，便于排查（也显示在磁贴上） */
+  source: string;
+}
+
+/** positionRisk 直接返回数组；account 把仓位放在 positions 字段里。 */
+export function extractPositions(payload: unknown): RawPositionRisk[] {
+  if (Array.isArray(payload)) return payload as RawPositionRisk[];
+  if (typeof payload === 'object' && payload !== null) {
+    const list = (payload as { positions?: unknown }).positions;
+    if (Array.isArray(list)) return list as RawPositionRisk[];
+  }
+  return [];
+}
 
 /** 当前持仓（含未实现盈亏）。空仓会被调用方过滤掉。 */
-export async function fetchPositionRisk(
+export async function fetchPositions(
   apiKey: string,
   secret: string,
   timeOffsetMs: number,
   baseUrl: string = DEFAULT_BINANCE_BASE_URL,
-): Promise<RawPositionRisk[]> {
-  let lastError: unknown = new BinanceApiError('api', '没有可用的持仓接口');
+): Promise<PositionFetchResult> {
+  let firstError: unknown = null;
+  let lastCodedError: BinanceApiError | null = null;
 
-  for (const path of POSITION_PATHS) {
+  for (const path of POSITION_SOURCES) {
     try {
-      return await signedGet<RawPositionRisk[]>(
-        path,
-        {},
-        apiKey,
-        secret,
-        timeOffsetMs,
-        baseUrl,
-      );
+      const payload = await signedGet<unknown>(path, {}, apiKey, secret, timeOffsetMs, baseUrl);
+      return { positions: extractPositions(payload), source: path };
     } catch (error) {
-      lastError = error;
-      // 只有"路径不存在/返回非 JSON"才换下一个版本；
-      // 鉴权失败、限流等错误应立刻抛出，重试另一个路径没有意义。
-      if (!(error instanceof BinanceApiError) || error.kind !== 'non-json') {
-        throw error;
+      firstError = firstError ?? error;
+      // 带币安错误码的（-2015/-1021 等）比"路径不存在"更有诊断价值
+      if (error instanceof BinanceApiError && error.code !== null) {
+        lastCodedError = error;
       }
     }
   }
 
-  throw lastError;
+  throw lastCodedError ?? firstError ?? new BinanceApiError('api', '没有可用的持仓接口');
 }
 
 /** 24 小时行情（公开接口）。 */
@@ -313,9 +331,13 @@ export async function selfCheck(
   }
 
   try {
-    const positions = await fetchPositionRisk(apiKey, secret, timeOffset, baseUrl);
-    const open = positions.filter((item) => Number(item.positionAmt) !== 0).length;
-    steps.push({ step: 'auth', ok: true, detail: `鉴权通过，当前 ${open} 个持仓` });
+    const positions = await fetchPositions(apiKey, secret, timeOffset, baseUrl);
+    const open = positions.positions.filter((item) => Number(item.positionAmt) !== 0).length;
+    steps.push({
+      step: 'auth',
+      ok: true,
+      detail: `鉴权通过（${positions.source}），当前 ${open} 个持仓`,
+    });
   } catch (caught) {
     steps.push({
       step: 'auth',

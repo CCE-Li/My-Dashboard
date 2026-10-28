@@ -5,7 +5,8 @@ export interface RawPositionRisk {
   symbol: string;
   positionAmt: string;
   entryPrice: string;
-  markPrice: string;
+  /** `/fapi/v2/account` 的 positions 里没有这个字段，只有 positionRisk 才有 */
+  markPrice?: string;
   /**
    * 未实现盈亏。币安文档在不同版本里拼写不一致（unRealizedProfit / unrealizedProfit），
    * 两个都声明为可选，解析时取存在的那个。

@@ -10,7 +10,7 @@ import {
   BinanceApiError,
   DEFAULT_BINANCE_BASE_URL,
   fetchKlines,
-  fetchPositionRisk,
+  fetchPositions,
   fetchServerTimeOffset,
   fetchTicker24h,
   fetchEgressIp,
@@ -56,6 +56,8 @@ export const useBinanceStore = defineStore('binance', () => {
   const fetchedAt = ref<number | null>(null);
   /** 本机出口 IP 的参考值（用于对照币安 IP 白名单） */
   const egressIp = ref<string | null>(null);
+  /** 持仓实际生效的接口路径，排错时很有用 */
+  const positionsSource = ref<string | null>(null);
 
   const hasCredentials = computed(
     () => apiKey.value.trim().length > 0 && apiSecret.value.trim().length > 0,
@@ -125,21 +127,24 @@ export const useBinanceStore = defineStore('binance', () => {
 
     if (hasCredentials.value) {
       try {
-        const raw = await fetchPositionRisk(
+        const result = await fetchPositions(
           apiKey.value,
           apiSecret.value,
           timeOffsetMs,
           apiBase.value,
         );
-        positions.value = raw
+        positionsSource.value = result.source;
+        positions.value = result.positions
           .map((item) => normalizePosition(item))
           .filter((item): item is NormalizedPosition => item !== null);
       } catch (caught) {
         positions.value = [];
+        positionsSource.value = null;
         positionsError.value = describeFailure(caught);
       }
     } else {
       positions.value = [];
+      positionsSource.value = null;
       positionsError.value = '未配置 API key / secret，无法读取持仓';
     }
 
@@ -175,14 +180,14 @@ export const useBinanceStore = defineStore('binance', () => {
     }
     try {
       const offset = await fetchServerTimeOffset(apiBase.value);
-      const raw = await fetchPositionRisk(
+      const result = await fetchPositions(
         apiKey.value,
         apiSecret.value,
         offset,
         apiBase.value,
       );
-      const open = raw.filter((item) => Number(item.positionAmt) !== 0).length;
-      return { ok: true, detail: `鉴权通过，当前 ${open} 个持仓` };
+      const open = result.positions.filter((item) => Number(item.positionAmt) !== 0).length;
+      return { ok: true, detail: `鉴权通过（${result.source}），当前 ${open} 个持仓` };
     } catch (caught) {
       return { ok: false, detail: describeFailure(caught) };
     }
@@ -223,6 +228,7 @@ export const useBinanceStore = defineStore('binance', () => {
     positionsError,
     fetchedAt,
     egressIp,
+    positionsSource,
     hasCredentials,
     isBusy,
     summary,

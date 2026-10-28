@@ -201,7 +201,12 @@ onMounted(() => {
     <p v-if="store.error" class="bn-hint bn-hint--warn">{{ store.error }}</p>
 
     <template #footer>
-      <span>SYNCED: {{ syncedLabel }}</span>
+      <span>
+        SYNCED: {{ syncedLabel }}
+        <template v-if="store.positionsSource">
+          · SRC: {{ store.positionsSource.replace('/fapi/', '') }}
+        </template>
+      </span>
       <span class="bn-actions">
         <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
         <button type="button" class="text-link" :disabled="store.isBusy" @click="sync">

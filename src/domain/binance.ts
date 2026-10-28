@@ -23,11 +23,16 @@ export function normalizePosition(raw: RawPositionRisk): NormalizedPosition | nu
   if (amount === 0) return null;
 
   const entryPrice = toNumber(raw.entryPrice);
-  const markPrice = toNumber(raw.markPrice);
+  let markPrice = toNumber(raw.markPrice);
   // 两个版本字段拼写不同，取存在的那个
   const unrealizedPnl = toNumber(raw.unRealizedProfit ?? raw.unrealizedProfit);
   const leverage = toNumber(raw.leverage) || 1;
   const notional = Math.abs(toNumber(raw.notional)) || Math.abs(amount * markPrice);
+
+  // /fapi/v2/account 的 positions 里没有 markPrice，用 名义价值 / 数量 反算
+  if (markPrice === 0 && notional > 0) {
+    markPrice = notional / Math.abs(amount);
+  }
 
   // 保证金 = 名义价值 / 杠杆；ROE = 盈亏 / 保证金
   const margin = notional / leverage;
