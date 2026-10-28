@@ -12,7 +12,18 @@ import type { RawKline, RawPositionRisk, RawTicker24h } from '@/types/binance';
  * 有完整权限。务必使用只读 key（关闭合约交易与提现）并配置 IP 白名单。
  */
 
-const BASE_URL = 'https://fapi.binance.com';
+export const DEFAULT_BINANCE_BASE_URL = 'https://fapi.binance.com';
+
+/**
+ * 允许自定义 API 根地址（例如自建反代）。币安在部分地区不可直接访问，
+ * 这时把地址换成自己的代理是唯一安全的做法 —— 不要把 key 交给公共 CORS 代理。
+ */
+export function normalizeBaseUrl(input: string): string {
+  const trimmed = input.trim().replace(/\/+$/, '');
+  if (!trimmed) return DEFAULT_BINANCE_BASE_URL;
+  if (!/^https?:\/\//i.test(trimmed)) return DEFAULT_BINANCE_BASE_URL;
+  return trimmed;
+}
 
 /** rechunk：请求有效窗口，签名时一并发送 */
 const RECV_WINDOW_MS = 5000;
@@ -95,15 +106,19 @@ function assertOk(response: Response, payload: unknown): void {
 async function publicGet<T>(
   path: string,
   params: Record<string, string | number> = {},
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
 ): Promise<T> {
   const query = toQuery(params);
-  const url = `${BASE_URL}${path}${query ? `?${query}` : ''}`;
+  const url = `${baseUrl}${path}${query ? `?${query}` : ''}`;
 
   let response: Response;
   try {
     response = await fetch(url, { headers: { Accept: 'application/json' } });
   } catch {
-    throw new BinanceApiError('network', '无法连接 fapi.binance.com，请检查网络或代理');
+    throw new BinanceApiError(
+      'network',
+      `无法连接 ${baseUrl}，请检查网络/代理，或在设置里填写自建代理地址`,
+    );
   }
 
   const payload = await readJson(response);
@@ -136,8 +151,10 @@ async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
 }
 
 /** 与币安服务器的时间偏差，签名时的 timestamp 用它校正。 */
-export async function fetchServerTimeOffset(): Promise<number> {
-  const payload = await publicGet<{ serverTime?: number }>('/fapi/v1/time');
+export async function fetchServerTimeOffset(
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
+): Promise<number> {
+  const payload = await publicGet<{ serverTime?: number }>('/fapi/v1/time', {}, baseUrl);
   if (typeof payload.serverTime !== 'number') {
     throw new BinanceApiError('api', '币安未返回服务器时间');
   }
@@ -150,6 +167,7 @@ async function signedGet<T>(
   apiKey: string,
   secret: string,
   timeOffsetMs: number,
+  baseUrl: string,
 ): Promise<T> {
   if (!apiKey.trim() || !secret.trim()) {
     throw new BinanceApiError('no-credentials', '还没有配置币安 API key / secret');
@@ -161,7 +179,7 @@ async function signedGet<T>(
     timestamp: Date.now() + timeOffsetMs,
   });
   const signature = await hmacSha256Hex(secret.trim(), signed);
-  const url = `${BASE_URL}${path}?${signed}&signature=${signature}`;
+  const url = `${baseUrl}${path}?${signed}&signature=${signature}`;
 
   let response: Response;
   try {
@@ -172,7 +190,10 @@ async function signedGet<T>(
       },
     });
   } catch {
-    throw new BinanceApiError('network', '无法连接 fapi.binance.com，请检查网络或代理');
+    throw new BinanceApiError(
+      'network',
+      `无法连接 ${baseUrl}，请检查网络/代理，或在设置里填写自建代理地址`,
+    );
   }
 
   const payload = await readJson(response);
@@ -185,6 +206,7 @@ export function fetchPositionRisk(
   apiKey: string,
   secret: string,
   timeOffsetMs: number,
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
 ): Promise<RawPositionRisk[]> {
   return signedGet<RawPositionRisk[]>(
     '/fapi/v1/positionRisk',
@@ -192,12 +214,16 @@ export function fetchPositionRisk(
     apiKey,
     secret,
     timeOffsetMs,
+    baseUrl,
   );
 }
 
 /** 24 小时行情（公开接口）。 */
-export function fetchTicker24h(symbol: string): Promise<RawTicker24h> {
-  return publicGet<RawTicker24h>('/fapi/v1/ticker/24hr', { symbol });
+export function fetchTicker24h(
+  symbol: string,
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
+): Promise<RawTicker24h> {
+  return publicGet<RawTicker24h>('/fapi/v1/ticker/24hr', { symbol }, baseUrl);
 }
 
 /** 最近 N 根 K 线（公开接口），默认 1 小时线 24 根。 */
@@ -205,6 +231,54 @@ export function fetchKlines(
   symbol: string,
   interval = '1h',
   limit = 24,
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
 ): Promise<RawKline[]> {
-  return publicGet<RawKline[]>('/fapi/v1/klines', { symbol, interval, limit });
+  return publicGet<RawKline[]>('/fapi/v1/klines', { symbol, interval, limit }, baseUrl);
+}
+
+/** 连通性自检：分三步报告，便于定位「连不上」到底卡在哪一环。 */
+export interface BinancePingStep {
+  step: 'reachability' | 'public-read' | 'auth';
+  ok: boolean;
+  detail: string;
+}
+
+export async function selfCheck(
+  apiKey: string,
+  secret: string,
+  baseUrl: string = DEFAULT_BINANCE_BASE_URL,
+): Promise<BinancePingStep[]> {
+  const steps: BinancePingStep[] = [];
+
+  let timeOffset = 0;
+  try {
+    timeOffset = await fetchServerTimeOffset(baseUrl);
+    steps.push({ step: 'reachability', ok: true, detail: `可达（时间偏差 ${timeOffset}ms）` });
+    steps.push({ step: 'public-read', ok: true, detail: '公开接口可读（服务器时间已取到）' });
+  } catch (caught) {
+    const detail = caught instanceof Error ? caught.message : String(caught);
+    steps.push({ step: 'reachability', ok: false, detail });
+    steps.push({ step: 'public-read', ok: false, detail: '网络不通，后续步骤已跳过' });
+    steps.push({ step: 'auth', ok: false, detail: '网络不通，未测试' });
+    return steps;
+  }
+
+  if (!apiKey.trim() || !secret.trim()) {
+    steps.push({ step: 'auth', ok: false, detail: '未填写 key / secret，跳过鉴权' });
+    return steps;
+  }
+
+  try {
+    const positions = await fetchPositionRisk(apiKey, secret, timeOffset, baseUrl);
+    const open = positions.filter((item) => Number(item.positionAmt) !== 0).length;
+    steps.push({ step: 'auth', ok: true, detail: `鉴权通过，当前 ${open} 个持仓` });
+  } catch (caught) {
+    steps.push({
+      step: 'auth',
+      ok: false,
+      detail: caught instanceof Error ? caught.message : String(caught),
+    });
+  }
+
+  return steps;
 }

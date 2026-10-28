@@ -65,4 +65,5 @@ export const STORAGE_KEYS = {
   binanceApiKey: 'binance-api-key',
   binanceApiSecret: 'binance-api-secret',
   binanceWatchlist: 'binance-watchlist',
+  binanceApiBase: 'binance-api-base',
 } as const;

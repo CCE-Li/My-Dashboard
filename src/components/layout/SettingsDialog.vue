@@ -32,7 +32,10 @@ const bnKeyDraft = ref('');
 const bnSecretDraft = ref('');
 const revealSecret = ref(false);
 const bnWatchlistDraft = ref('');
+const bnBaseDraft = ref('');
 const bnTestResult = ref<{ ok: boolean; detail: string } | null>(null);
+const bnSteps = ref<Array<{ step: string; ok: boolean; detail: string }>>([]);
+const bnChecking = ref(false);
 const importing = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -48,7 +51,9 @@ watch(
     bnKeyDraft.value = binance.apiKey;
     bnSecretDraft.value = binance.apiSecret;
     bnWatchlistDraft.value = binance.watchlist.join(', ');
+    bnBaseDraft.value = binance.apiBase;
     bnTestResult.value = null;
+    bnSteps.value = [];
     revealSecret.value = false;
   },
 );
@@ -169,6 +174,30 @@ async function saveBinanceWatchlist(): Promise<void> {
   bnWatchlistDraft.value = binance.watchlist.join(', ');
   toast.push('BINANCE_WATCHLIST_SAVED: 观察列表已保存');
 }
+
+function saveBinanceBase(): void {
+  binance.saveApiBase(bnBaseDraft.value);
+  bnBaseDraft.value = binance.apiBase;
+  toast.push(`BINANCE_BASE_SAVED: ${binance.apiBase}`);
+}
+
+async function runBinanceSelfCheck(): Promise<void> {
+  bnChecking.value = true;
+  binance.saveCredentials(bnKeyDraft.value, bnSecretDraft.value);
+  binance.saveApiBase(bnBaseDraft.value);
+  bnBaseDraft.value = binance.apiBase;
+  try {
+    bnSteps.value = await binance.runSelfCheck();
+  } finally {
+    bnChecking.value = false;
+  }
+}
+
+const STEP_LABELS: Record<string, string> = {
+  reachability: '1. 可达性',
+  'public-read': '2. 公开读',
+  auth: '3. 鉴权',
+};
 
 function pickBackup(): void {
   fileInput.value?.click();
@@ -412,9 +441,34 @@ function resetLayout(): void {
               <span>显示 secret 明文</span>
             </label>
 
+            <label class="field">
+              <span class="field__label">
+                API 地址
+                <em class="field__unset">默认 https://fapi.binance.com</em>
+              </span>
+              <input
+                v-model="bnBaseDraft"
+                class="sharp-input"
+                type="text"
+                placeholder="https://fapi.binance.com"
+                spellcheck="false"
+              />
+            </label>
+            <div class="option-row">
+              <button type="button" class="sharp-btn" @click="saveBinanceBase">保存地址</button>
+            </div>
+
             <div class="option-row">
               <button type="button" class="sharp-btn" @click="saveBinance">SAVE</button>
               <button type="button" class="sharp-btn" @click="testBinance">TEST</button>
+              <button
+                type="button"
+                class="sharp-btn"
+                :disabled="bnChecking"
+                @click="runBinanceSelfCheck"
+              >
+                {{ bnChecking ? '检测中...' : '网络自检' }}
+              </button>
               <button
                 v-if="binance.hasCredentials"
                 type="button"
@@ -432,6 +486,17 @@ function resetLayout(): void {
             >
               &gt; {{ bnTestResult.detail }}
             </p>
+
+            <ul v-if="bnSteps.length > 0" class="bn-steps">
+              <li
+                v-for="item in bnSteps"
+                :key="item.step"
+                :style="{ color: item.ok ? 'var(--accent)' : 'var(--accent-pink)' }"
+              >
+                {{ STEP_LABELS[item.step] ?? item.step }} ·
+                {{ item.ok ? 'OK' : 'FAIL' }} —— {{ item.detail }}
+              </li>
+            </ul>
 
             <label class="field">
               <span class="field__label">观察列表（逗号分隔，最多 8 个）</span>
@@ -696,6 +761,17 @@ function resetLayout(): void {
 .field__warn {
   font-style: normal;
   color: var(--warn);
+}
+
+.bn-steps {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.5625rem;
+  font-family: var(--font-mono);
+  line-height: 1.6;
 }
 
 .settings-result {

@@ -8,10 +8,14 @@ import {
 } from '@/domain/binance';
 import {
   BinanceApiError,
+  DEFAULT_BINANCE_BASE_URL,
   fetchKlines,
   fetchPositionRisk,
   fetchServerTimeOffset,
   fetchTicker24h,
+  normalizeBaseUrl,
+  selfCheck,
+  type BinancePingStep,
 } from '@/services/binanceApi';
 import { readJson, readText, STORAGE_KEYS, writeJson, writeText } from '@/services/storage';
 import type { NormalizedPosition, PositionSummary, WatchQuote } from '@/types/binance';
@@ -37,6 +41,10 @@ export const useBinanceStore = defineStore('binance', () => {
   const apiSecret = ref(readText(STORAGE_KEYS.binanceApiSecret, ''));
   const watchlist = ref<string[]>(
     normalizeSymbols(readJson<string[]>(STORAGE_KEYS.binanceWatchlist, DEFAULT_WATCHLIST)),
+  );
+  /** API 根地址：币安在部分地区不可达时需要换成自建反代 */
+  const apiBase = ref(
+    normalizeBaseUrl(readText(STORAGE_KEYS.binanceApiBase, DEFAULT_BINANCE_BASE_URL)),
   );
 
   const positions = ref<NormalizedPosition[]>([]);
@@ -72,6 +80,11 @@ export const useBinanceStore = defineStore('binance', () => {
     writeJson(STORAGE_KEYS.binanceWatchlist, watchlist.value);
   }
 
+  function saveApiBase(input: string): void {
+    apiBase.value = normalizeBaseUrl(input);
+    writeText(STORAGE_KEYS.binanceApiBase, apiBase.value);
+  }
+
   function clearCredentials(): void {
     apiKey.value = '';
     apiSecret.value = '';
@@ -98,7 +111,7 @@ export const useBinanceStore = defineStore('binance', () => {
 
     let timeOffsetMs = 0;
     try {
-      timeOffsetMs = await fetchServerTimeOffset();
+      timeOffsetMs = await fetchServerTimeOffset(apiBase.value);
     } catch (caught) {
       error.value = describeFailure(caught);
       state.value = 'error';
@@ -107,7 +120,12 @@ export const useBinanceStore = defineStore('binance', () => {
 
     if (hasCredentials.value) {
       try {
-        const raw = await fetchPositionRisk(apiKey.value, apiSecret.value, timeOffsetMs);
+        const raw = await fetchPositionRisk(
+          apiKey.value,
+          apiSecret.value,
+          timeOffsetMs,
+          apiBase.value,
+        );
         positions.value = raw
           .map((item) => normalizePosition(item))
           .filter((item): item is NormalizedPosition => item !== null);
@@ -124,8 +142,8 @@ export const useBinanceStore = defineStore('binance', () => {
       const collected: WatchQuote[] = [];
       for (const symbol of watchlist.value) {
         const [ticker, klines] = await Promise.all([
-          fetchTicker24h(symbol),
-          fetchKlines(symbol),
+          fetchTicker24h(symbol, apiBase.value),
+          fetchKlines(symbol, '1h', 24, apiBase.value),
         ]);
         const closes = extractCloses(klines as unknown as unknown[][]);
         collected.push({
@@ -151,13 +169,23 @@ export const useBinanceStore = defineStore('binance', () => {
       return { ok: false, detail: '还没有填写 API key 与 secret' };
     }
     try {
-      const offset = await fetchServerTimeOffset();
-      const raw = await fetchPositionRisk(apiKey.value, apiSecret.value, offset);
+      const offset = await fetchServerTimeOffset(apiBase.value);
+      const raw = await fetchPositionRisk(
+        apiKey.value,
+        apiSecret.value,
+        offset,
+        apiBase.value,
+      );
       const open = raw.filter((item) => Number(item.positionAmt) !== 0).length;
       return { ok: true, detail: `鉴权通过，当前 ${open} 个持仓` };
     } catch (caught) {
       return { ok: false, detail: describeFailure(caught) };
     }
+  }
+
+  /** 三步自检：可达性 → 公开读 → 鉴权。用来定位「连不上」卡在哪。 */
+  function runSelfCheck(): Promise<BinancePingStep[]> {
+    return selfCheck(apiKey.value, apiSecret.value, apiBase.value);
   }
 
   /** 供设置面板校验观察列表里的交易对是否可用（用公开接口探测）。 */
@@ -167,7 +195,7 @@ export const useBinanceStore = defineStore('binance', () => {
     const invalid: string[] = [];
     for (const symbol of symbols) {
       try {
-        await fetchTicker24h(symbol);
+        await fetchTicker24h(symbol, apiBase.value);
       } catch {
         invalid.push(symbol);
       }
@@ -178,6 +206,7 @@ export const useBinanceStore = defineStore('binance', () => {
   return {
     apiKey,
     apiSecret,
+    apiBase,
     watchlist,
     positions,
     sortedPositions,
@@ -192,9 +221,11 @@ export const useBinanceStore = defineStore('binance', () => {
     maskedKey,
     saveCredentials,
     saveWatchlist,
+    saveApiBase,
     clearCredentials,
     sync,
     testCredentials,
+    runSelfCheck,
     validateSymbols,
   };
 });
