@@ -126,7 +126,11 @@ async function publicGet<T>(
   return payload as T;
 }
 
-async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
+/**
+ * 按币安规则计算签名：HMAC-SHA256(secret, 待签字符串) 的十六进制。
+ * 导出是为了能用标准测试向量验证实现本身是否正确。
+ */
+export async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
   const subtle = globalThis.crypto?.subtle;
   if (!subtle) {
     throw new BinanceApiError(
