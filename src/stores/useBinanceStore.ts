@@ -72,8 +72,10 @@ export const useBinanceStore = defineStore('binance', () => {
   });
 
   function saveCredentials(nextKey: string, nextSecret: string): void {
-    apiKey.value = nextKey.trim();
-    apiSecret.value = nextSecret.trim();
+    // 去掉所有空白：从网页复制 key/secret 时经常带换行或空格，
+    // 中间夹一个空格就会让币安判定为 invalid API key（-2015）。
+    apiKey.value = nextKey.replace(/\s+/g, '');
+    apiSecret.value = nextSecret.replace(/\s+/g, '');
     writeText(STORAGE_KEYS.binanceApiKey, apiKey.value);
     writeText(STORAGE_KEYS.binanceApiSecret, apiSecret.value);
   }

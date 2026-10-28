@@ -148,6 +148,8 @@ function saveBinance(): void {
 
 async function testBinance(): Promise<void> {
   binance.saveCredentials(bnKeyDraft.value, bnSecretDraft.value);
+  bnKeyDraft.value = binance.apiKey;
+  bnSecretDraft.value = binance.apiSecret;
   bnTestResult.value = await binance.testCredentials();
   toast.push(
     bnTestResult.value.ok
@@ -155,6 +157,21 @@ async function testBinance(): Promise<void> {
       : `BINANCE_FAILED: ${bnTestResult.value.detail}`,
   );
 }
+
+/** 本地预检：绝大多数 -2015 是这几类填错，先在发请求前拦住。 */
+const bnPrecheck = computed(() => {
+  const key = bnKeyDraft.value.replace(/\s+/g, '');
+  const secret = bnSecretDraft.value.replace(/\s+/g, '');
+  if (!key || !secret) return '';
+  if (key === secret) return 'key 和 secret 填成了同一个值 —— 大概率填反或复制错了。';
+  if (key.length !== 64) {
+    return `币安 HMAC key 是 64 位，当前 ${key.length} 位 —— 可能少复制了一段。`;
+  }
+  if (secret.length !== 64) {
+    return `secret 是 64 位，当前 ${secret.length} 位 —— 可能少复制了一段。`;
+  }
+  return '';
+});
 
 function clearBinance(): void {
   binance.clearCredentials();
@@ -451,6 +468,8 @@ function resetLayout(): void {
               <input v-model="revealSecret" type="checkbox" />
               <span>显示 secret 明文</span>
             </label>
+
+            <p v-if="bnPrecheck" class="settings-warn">{{ bnPrecheck }}</p>
 
             <label class="field">
               <span class="field__label">
