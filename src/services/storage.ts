@@ -63,6 +63,7 @@ export const STORAGE_KEYS = {
   usageSpan: 'usage-span',
   quotaConfig: 'quota-config',
   theme: 'theme',
+  glassFrost: 'glass-frost',
   binanceApiKey: 'binance-api-key',
   binanceApiSecret: 'binance-api-secret',
   binanceWatchlist: 'binance-watchlist',

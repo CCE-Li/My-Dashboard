@@ -110,6 +110,7 @@ describe('normalizeServerMetrics', () => {
     expect(view.memoryPercent).toBe(50);
     expect(view.disk?.mount).toBe('/');
     expect(view.disk?.percent).toBe(50);
+    expect(view.disks).toHaveLength(1);
     expect(view.generatedAt).toBe('2026-11-08T10:00:00.000Z');
   });
 
@@ -120,6 +121,7 @@ describe('normalizeServerMetrics', () => {
     expect(view.cpuPercent).toBe(0);
     expect(view.memoryPercent).toBe(0);
     expect(view.disk).toBeNull();
+    expect(view.disks).toEqual([]);
     expect(view.loadAvg).toEqual([]);
     expect(view.generatedAt).toBeNull();
   });

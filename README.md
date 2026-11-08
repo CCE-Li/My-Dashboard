@@ -85,8 +85,11 @@ My-Dashboard/
    { id: 'mytile', span: 'single', label: '我的磁贴', component: MyTile, settings: MyTileSettings },
    ```
 
-无需改动其它文件：布局顺序、拖拽、持久化、重置、页脚统计、各自的设置弹窗
-都由注册表驱动。`TileId` 也从 `TILES` 推导，不必手工维护 id 清单。
+   `detail` 字段同理：在 `src/tiles/detail/` 写一个详情组件挂上去，就会显示在
+   「穿越」悬浮窗里放大版磁贴的下方。
+
+无需改动其它文件：布局顺序、拖拽、持久化、重置、页脚统计、各自的设置弹窗、
+详情弹窗都由注册表驱动。`TileId` 也从 `TILES` 推导，不必手工维护 id 清单。
 删除某条后，用户既有的布局会自动跳过它（见 `useLayoutStore` 的 `reconcile`）。
 
 > id 是布局持久化的键，**发布后不要改名**，否则用户的拖拽顺序会重置。
@@ -111,8 +114,9 @@ My-Dashboard/
    }
    ```
 
-   > `--glass-*`（毛玻璃磁贴：`--glass-bg` / `--glass-border` / `--glass-blur`）定义在
+   > `--glass-*`（毛玻璃磁贴：`--glass-pct` / `--glass-bg` / `--glass-border` / `--glass-blur`）定义在
    > `:root`，由 `--bg-surface` / `--border-strong` 派生，**随主题自动适配**，新主题无需重复声明。
+   > 其中 `--glass-pct` / `--glass-blur` 会被「磨砂程度」滑杆写在 `:root` 上覆盖。
 
 2. 在 `src/config/themes.ts` 的 `THEMES` 里加一条（id、标签、说明、themeColor）。
 3. 完成。顶栏选择器、持久化、`<meta name="theme-color">` 都会自动跟上。
@@ -223,6 +227,11 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
 - **每块磁贴有自己的设置**：点磁贴上的 `[CONFIG]` 打开只属于它的设置弹窗
   （内容由注册表的 `settings` 字段声明）；顶栏 `[SETTINGS]` 只管应用级
   主题 / 磁贴显隐 / 布局。
+- **点磁贴「穿越」看详情**：点磁贴的空白处（按钮 / 输入框 / 链接 / 拖拽把手以外），
+  所有磁贴会向屏幕方向放大飞去并淡出（回弹曲线），随后弹出该磁贴的**放大版 + 详情区**
+  （详情区由注册表的 `detail` 字段声明，没有则只放大）。`[ESC]` 或点背景关闭。
+- **磨砂程度**：顶栏 `[SETTINGS] → 外观` 的滑杆实时调整磁贴毛玻璃的模糊与通透度
+  （写 `--glass-pct` / `--glass-blur`），记在本机。
 - **滚轮调节用量跨度**：鼠标在 `API_TOKEN_MONITOR` 的条形图上滚动即可切换
   24H / 48H / 7D / 14D / 30D。小时档位读 `byHour`（采集器只保留 48 小时），
   天档位读 `byDay`；跨度选择会记住。档位定义在 `src/config/usageSpans.ts`。

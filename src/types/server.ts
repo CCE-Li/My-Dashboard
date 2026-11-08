@@ -51,5 +51,7 @@ export interface ServerView {
   memoryPercent: number;
   /** 主磁盘（优先挂载点 /）；端点未提供磁盘时为 null */
   disk: ServerDisk | null;
+  /** 全部磁盘（详情弹窗用） */
+  disks: ServerDisk[];
   generatedAt: string | null;
 }

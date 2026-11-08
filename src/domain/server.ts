@@ -91,6 +91,7 @@ export function normalizeServerMetrics(raw: RawServerMetrics): ServerView {
     memoryUsedBytes,
     memoryPercent: usagePercent(memoryUsedBytes, memoryTotalBytes),
     disk: pickPrimaryDisk(disks),
+    disks,
     generatedAt: typeof raw.generatedAt === 'string' ? raw.generatedAt : null,
   };
 }

@@ -59,8 +59,10 @@
   --bg-image: url('../assets/bg/cyberpunk-city.webp');
   --bg-image-opacity: 0.55;
 
-  /* 毛玻璃磁贴：半透明底 + 背景模糊。色值由 --bg-surface 派生，随主题自动适配 */
-  --glass-bg: color-mix(in srgb, var(--bg-surface) 55%, transparent);
+  /* 毛玻璃磁贴：半透明底 + 背景模糊。色值由 --bg-surface 派生，随主题自动适配。
+     --glass-pct / --glass-blur 会被「磨砂程度」滑杆写在 :root 上覆盖 */
+  --glass-pct: 55%;
+  --glass-bg: color-mix(in srgb, var(--bg-surface) var(--glass-pct), transparent);
   --glass-border: color-mix(in srgb, var(--border-strong) 75%, transparent);
   --glass-blur: 12px;
 

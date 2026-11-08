@@ -7,6 +7,8 @@ import NapcatTile from './NapcatTile.vue';
 import SearchTile from './SearchTile.vue';
 import ServerTile from './ServerTile.vue';
 import TokenUsageTile from './TokenUsageTile.vue';
+import NapcatDetail from './detail/NapcatDetail.vue';
+import ServerDetail from './detail/ServerDetail.vue';
 import BinanceSettings from './settings/BinanceSettings.vue';
 import BrzSettings from './settings/BrzSettings.vue';
 import CodeforcesSettings from './settings/CodeforcesSettings.vue';
@@ -70,8 +72,16 @@ export const TILES = [
     label: '服务器状态',
     component: ServerTile,
     settings: ServerSettings,
+    detail: ServerDetail,
   },
-  { id: 'napcat', span: 'single', label: 'NapCat / Bot', component: NapcatTile, settings: NapcatSettings },
+  {
+    id: 'napcat',
+    span: 'single',
+    label: 'NapCat / Bot',
+    component: NapcatTile,
+    settings: NapcatSettings,
+    detail: NapcatDetail,
+  },
 ] as const satisfies readonly TileDefinition[];
 
 /** 磁贴 id：由注册表推导，作为拖拽顺序持久化的稳定键 */

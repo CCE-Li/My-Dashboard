@@ -10,15 +10,35 @@ import {
 } from '@/domain/tileLayout';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useUiStore } from '@/stores/useUiStore';
 import { resolveTiles, type TileId } from '@/tiles/registry';
 
 const layout = useLayoutStore();
 const toast = useToastStore();
+const ui = useUiStore();
 
 /** 只渲染可见磁贴；隐藏的仍留在 order 里，重新显示时回到原位置 */
 const tiles = computed(() =>
   resolveTiles(layout.order).filter((tile) => layout.isVisible(tile.id)),
 );
+
+const dragging = computed(() => draggingId.value !== null);
+/** 详情弹窗打开时，所有磁贴向屏幕方向飞去 */
+const zoomed = computed(() => ui.detailTileId !== null);
+
+/**
+ * 点磁贴的空白处打开详情。「空白处」= 不在这些交互元素内；
+ * [draggable] 顺带排除了拖拽把手，避免点手柄也触发。
+ */
+const INTERACTIVE_SELECTOR =
+  'a,button,input,select,textarea,label,[contenteditable="true"],[draggable="true"],[data-no-zoom]';
+
+function onTileClick(id: TileId, event: MouseEvent): void {
+  if (draggingId.value || ui.detailTileId !== null) return;
+  const target = event.target;
+  if (target instanceof Element && target.closest(INTERACTIVE_SELECTOR)) return;
+  ui.openTileDetail(id);
+}
 
 const gridRef = ref<HTMLElement | null>(null);
 /** 逻辑上的拖拽中磁贴（立即生效，驱动几何计算） */
@@ -212,7 +232,11 @@ function onDragEnd(): void {
     id="tiles-grid"
     ref="gridRef"
     class="tile-grid shell__block"
-    :class="{ 'tile-grid--settling': noTransition }"
+    :class="{
+      'tile-grid--settling': noTransition,
+      'tile-grid--dragging': dragging,
+      'tile-grid--zoomed': zoomed,
+    }"
     @dragover.prevent="onGridDragOver"
     @drop.prevent="onGridDrop"
   >
@@ -223,6 +247,7 @@ function onDragEnd(): void {
       :class="[`tile-slot--${tile.span}`, { 'tile-slot--lifted': liftedId === tile.id }]"
       :style="slotStyle(tile.id)"
       :data-tile-id="tile.id"
+      @click="onTileClick(tile.id, $event)"
       @dragstart="onDragStart(tile.id)"
       @dragend="onDragEnd"
     >
@@ -235,9 +260,33 @@ function onDragEnd(): void {
 .tile-slot {
   min-width: 0;
   display: flex;
-  /* 让位与归位都走同一条缓动曲线；时间压到 160ms 让响应更跟手 */
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+  /* 默认走一条带回弹的曲线：拖拽落位、「穿越」归位都用它，手感更 Q 弹 */
+  transition:
+    transform 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 420ms ease-out;
   will-change: transform;
+}
+
+/* 拖拽期间要跟手：换成短过渡，别用回弹曲线 */
+.tile-grid--dragging .tile-slot {
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease;
+}
+
+/* 「穿越」：所有磁贴朝屏幕方向放大飞去并淡出（加速曲线，像被甩向镜头） */
+.tile-grid--zoomed {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tile-grid--zoomed .tile-slot {
+  transform: scale(2.6);
+  opacity: 0;
+  transition:
+    transform 460ms cubic-bezier(0.5, 0, 0.75, 0),
+    opacity 360ms ease-in;
 }
 
 .tile-slot > * {

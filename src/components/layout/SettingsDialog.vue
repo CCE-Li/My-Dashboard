@@ -39,6 +39,23 @@ function resetLayout(): void {
         </button>
       </div>
       <p class="settings-hint">{{ themeStore.theme.description }}</p>
+
+      <label class="field">
+        <span class="field__label">
+          磨砂程度
+          <em class="field__saved">{{ themeStore.glass }}%</em>
+        </span>
+        <input
+          class="range"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          :value="themeStore.glass"
+          @input="themeStore.setGlass(Number(($event.target as HTMLInputElement).value))"
+        />
+      </label>
+      <p class="settings-hint">调节磁贴毛玻璃的模糊与通透度，实时生效，记在本机。</p>
     </section>
 
     <!-- 磁贴显隐 -->

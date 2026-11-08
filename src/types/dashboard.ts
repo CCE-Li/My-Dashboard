@@ -15,6 +15,8 @@ export interface TileDefinition<Id extends string = string> {
   component: Component;
   /** 该磁贴自己的设置面板；[CONFIG] 会打开它。无配置项的磁贴可省略 */
   settings?: Component;
+  /** 该磁贴的详情区，显示在「穿越」悬浮窗里放大版磁贴的下方；可省略 */
+  detail?: Component;
 }
 
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error';
