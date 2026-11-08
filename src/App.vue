@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import AppFooter from '@/components/layout/AppFooter.vue';
 import NoiseBackdrop from '@/components/layout/NoiseBackdrop.vue';
+import RoadSpotlight from '@/components/layout/RoadSpotlight.vue';
 import SettingsDialog from '@/components/layout/SettingsDialog.vue';
 import StatusHeader from '@/components/layout/StatusHeader.vue';
 import TileGrid from '@/components/layout/TileGrid.vue';
@@ -20,6 +21,7 @@ const noiseActive = computed(() => themeStore.themeId === 'simplex');
 
 <template>
   <NoiseBackdrop :active="noiseActive" />
+  <RoadSpotlight />
   <div class="shell">
     <StatusHeader />
     <TileGrid />

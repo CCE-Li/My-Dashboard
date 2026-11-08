@@ -232,6 +232,9 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
   （详情区由注册表的 `detail` 字段声明，没有则只放大）。`[ESC]` 或点背景关闭。
 - **磨砂程度**：顶栏 `[SETTINGS] → 外观` 的滑杆实时调整磁贴毛玻璃的模糊与通透度
   （写 `--glass-pct` / `--glass-blur`），记在本机。
+- **背景「红绿灯」**：CYBERPUNK 主题下，鼠标经过的圆形范围内，背景图里的白色路网会被填红，
+  指针移开或打开弹窗时慢慢淡出。用同一张背景图做**亮度遮罩**（`mask-mode: luminance`）实现，
+  不额外下载资源；不支持该特性的浏览器自动隐藏（见 `RoadSpotlight.vue` 的 `@supports`）。
 - **滚轮调节用量跨度**：鼠标在 `API_TOKEN_MONITOR` 的条形图上滚动即可切换
   24H / 48H / 7D / 14D / 30D。小时档位读 `byHour`（采集器只保留 48 小时），
   天档位读 `byDay`；跨度选择会记住。档位定义在 `src/config/usageSpans.ts`。

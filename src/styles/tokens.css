@@ -66,6 +66,11 @@
   --glass-border: color-mix(in srgb, var(--border-strong) 75%, transparent);
   --glass-blur: 12px;
 
+  /* 鼠标「红绿灯」：经过时把背景图里的白色路网填红。
+     mask 用同一张图做亮度遮罩 —— 亮像素（路网）显色，黑底透明 */
+  --road-spot-color: #ff2b2b;
+  --road-spot-mask: url('../assets/bg/cyberpunk-city.webp');
+
   /* 字体 */
   --font-mono: 'JetBrains Mono', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
   --tracking-tight: -0.02em;
@@ -132,6 +137,8 @@
 
   --bg-image: none;
   --bg-image-opacity: 0;
+  /* 没有背景图 → 用全透明遮罩，红绿灯效果自动失效 */
+  --road-spot-mask: linear-gradient(transparent, transparent);
 }
 
 /* ---------- VT220：黄色荧光屏 ---------- */
@@ -181,6 +188,7 @@
 
   --bg-image: none;
   --bg-image-opacity: 0;
+  --road-spot-mask: linear-gradient(transparent, transparent);
 }
 
 /* ---------- SIMPLEX：石墨冷调 + 噪声颗粒 ---------- */
@@ -225,4 +233,5 @@
 
   --bg-image: none;
   --bg-image-opacity: 0;
+  --road-spot-mask: linear-gradient(transparent, transparent);
 }
