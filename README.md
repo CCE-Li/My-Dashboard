@@ -101,12 +101,18 @@ My-Dashboard/
    [data-theme='mytheme'] {
      --bg-base: #...;
      --accent: #...;
-     /* 氛围层可选：雾霾用 radial-gradient，扫描线用 repeating-linear-gradient */
+     /* 氛围层（盖在内容**之上**）可选：雾霾用 radial-gradient，扫描线用 repeating-linear-gradient */
      --atmosphere-image: repeating-linear-gradient(...);
      --atmosphere-opacity: 1;
      --text-glow: 0 0 6px rgba(...);
+     /* 页面背景图（铺在内容**之下**，与氛围层相反），可选 */
+     --bg-image: url('../assets/bg/xxx.webp');
+     --bg-image-opacity: 0.55;
    }
    ```
+
+   > `--glass-*`（毛玻璃磁贴：`--glass-bg` / `--glass-border` / `--glass-blur`）定义在
+   > `:root`，由 `--bg-surface` / `--border-strong` 派生，**随主题自动适配**，新主题无需重复声明。
 
 2. 在 `src/config/themes.ts` 的 `THEMES` 里加一条（id、标签、说明、themeColor）。
 3. 完成。顶栏选择器、持久化、`<meta name="theme-color">` 都会自动跟上。

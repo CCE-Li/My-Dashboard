@@ -27,6 +27,25 @@ body {
 }
 
 /**
+ * 页面背景图：铺在内容**之下**（z-index: -1，故必须在 #app 之下）。
+ * 注意与下面的「氛围层」区分 —— 那是盖在内容**之上**的。
+ * 由各主题的 --bg-image / --bg-image-opacity 决定；默认只有 CYBERPUNK 用图。
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--bg-image-opacity);
+  transition: opacity var(--transition-fast);
+}
+
+/**
  * 氛围层：Blade Runner 的琥珀雾霾 / VT220 的扫描线。
  * 固定覆盖在最上层但不拦截任何指针事件，配色由各主题的
  * --atmosphere-image 与 --atmosphere-opacity 决定；默认主题不渲染。
@@ -129,12 +148,16 @@ body::after {
 
 /* ---------- 卡片 ---------- */
 
+/* 毛玻璃卡片：半透明底 + 背景模糊，透出后面的页面背景图 */
 .sharp-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   transition:
     border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .sharp-card:hover {

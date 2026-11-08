@@ -30,7 +30,7 @@
   --text-primary: #ffffff;
   --text-body: #d1d5db;
   --text-dim: #71717a;
-  --text-faint: #52525b;
+  --text-faint: #a1a1aa;
 
   /* 强调色 */
   --accent: #00ff88;
@@ -54,6 +54,15 @@
   --text-glow: none;
   /* Simplex 噪点层的不透明度；只有 simplex 主题会打开 */
   --noise-opacity: 0;
+
+  /* 页面背景图（铺在内容之下；氛围层是盖在内容之上，二者不同） */
+  --bg-image: url('../assets/bg/cyberpunk-city.webp');
+  --bg-image-opacity: 0.55;
+
+  /* 毛玻璃磁贴：半透明底 + 背景模糊。色值由 --bg-surface 派生，随主题自动适配 */
+  --glass-bg: color-mix(in srgb, var(--bg-surface) 55%, transparent);
+  --glass-border: color-mix(in srgb, var(--border-strong) 75%, transparent);
+  --glass-blur: 12px;
 
   /* 字体 */
   --font-mono: 'JetBrains Mono', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
@@ -118,6 +127,9 @@
     radial-gradient(ellipse 140% 90% at 50% 110%, rgba(255, 120, 25, 0.12) 0%, transparent 60%);
   --atmosphere-opacity: 1;
   --text-glow: none;
+
+  --bg-image: none;
+  --bg-image-opacity: 0;
 }
 
 /* ---------- VT220：黄色荧光屏 ---------- */
@@ -164,6 +176,9 @@
   --atmosphere-opacity: 1;
   /* 荧光粉的晕开效果 */
   --text-glow: 0 0 6px rgba(255, 210, 74, 0.28);
+
+  --bg-image: none;
+  --bg-image-opacity: 0;
 }
 
 /* ---------- SIMPLEX：石墨冷调 + 噪声颗粒 ---------- */
@@ -205,4 +220,7 @@
   --atmosphere-opacity: 0;
   --text-glow: none;
   --noise-opacity: 0.09;
+
+  --bg-image: none;
+  --bg-image-opacity: 0;
 }
