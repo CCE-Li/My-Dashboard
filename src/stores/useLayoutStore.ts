@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { readJson, removeKey, STORAGE_KEYS, writeJson } from '@/services/storage';
-import type { TileId } from '@/types/dashboard';
-import { TILE_IDS } from '@/tiles/registry';
+import { TILE_IDS, type TileId } from '@/tiles/registry';
 
 function isTileId(value: unknown): value is TileId {
   return typeof value === 'string' && (TILE_IDS as readonly string[]).includes(value);
@@ -20,15 +19,48 @@ function reconcile(saved: readonly string[]): TileId[] {
   return [...valid, ...appended];
 }
 
+/**
+ * 隐藏集合同样与注册表对齐：丢弃已下线的 id、去重。
+ * 新增的磁贴不在集合里，因此默认是可见的。
+ */
+function reconcileHidden(saved: readonly string[]): TileId[] {
+  return [...new Set(saved.filter(isTileId))];
+}
+
 export const useLayoutStore = defineStore('layout', () => {
   const order = ref<TileId[]>(reconcile(readJson<string[]>(STORAGE_KEYS.tileOrder, [...TILE_IDS])));
+  const hidden = ref<TileId[]>(
+    reconcileHidden(readJson<string[]>(STORAGE_KEYS.tileHidden, [])),
+  );
+
+  /** 当前实际渲染的磁贴 id，保持用户的顺序 */
+  const visibleIds = computed(() => order.value.filter((id) => !hidden.value.includes(id)));
 
   const isCustomised = computed(
-    () => order.value.join(',') !== [...TILE_IDS].join(','),
+    () =>
+      order.value.join(',') !== [...TILE_IDS].join(',') ||
+      hidden.value.length > 0,
   );
 
   function persist(): void {
     writeJson(STORAGE_KEYS.tileOrder, order.value);
+  }
+
+  function persistHidden(): void {
+    writeJson(STORAGE_KEYS.tileHidden, hidden.value);
+  }
+
+  function isVisible(id: TileId): boolean {
+    return !hidden.value.includes(id);
+  }
+
+  /** 切换单个磁贴的显示/隐藏；顺序不动，重新显示时回到原位置 */
+  function setVisible(id: TileId, visible: boolean): void {
+    const next = new Set(hidden.value);
+    if (visible) next.delete(id);
+    else next.add(id);
+    hidden.value = [...next];
+    persistHidden();
   }
 
   /** 把 dragged 移动到 target 之前或之后（与原始单文件版的落点语义一致）。 */
@@ -48,10 +80,22 @@ export const useLayoutStore = defineStore('layout', () => {
     persist();
   }
 
-  function resetOrder(): void {
+  /** 恢复默认：顺序回到注册表顺序，并让所有磁贴重新可见 */
+  function resetLayout(): void {
     removeKey(STORAGE_KEYS.tileOrder);
+    removeKey(STORAGE_KEYS.tileHidden);
     order.value = [...TILE_IDS];
+    hidden.value = [];
   }
 
-  return { order, isCustomised, moveTile, resetOrder };
+  return {
+    order,
+    hidden,
+    visibleIds,
+    isCustomised,
+    isVisible,
+    setVisible,
+    moveTile,
+    resetLayout,
+  };
 });

@@ -10,13 +10,15 @@ import {
 } from '@/domain/tileLayout';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useToastStore } from '@/stores/useToastStore';
-import { resolveTiles } from '@/tiles/registry';
-import type { TileId } from '@/types/dashboard';
+import { resolveTiles, type TileId } from '@/tiles/registry';
 
 const layout = useLayoutStore();
 const toast = useToastStore();
 
-const tiles = computed(() => resolveTiles(layout.order));
+/** 只渲染可见磁贴；隐藏的仍留在 order 里，重新显示时回到原位置 */
+const tiles = computed(() =>
+  resolveTiles(layout.order).filter((tile) => layout.isVisible(tile.id)),
+);
 
 const gridRef = ref<HTMLElement | null>(null);
 /** 逻辑上的拖拽中磁贴（立即生效，驱动几何计算） */

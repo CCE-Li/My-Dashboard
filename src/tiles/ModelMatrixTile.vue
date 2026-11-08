@@ -130,7 +130,7 @@ function formatAmount(bar: QuotaBar, value: number): string {
 
     <template #footer>
       <span>配额需自行配置 · 官方无额度接口</span>
-      <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+      <button type="button" class="text-link" @click="ui.openTileSettings('models')">[CONFIG]</button>
     </template>
   </TileFrame>
 </template>

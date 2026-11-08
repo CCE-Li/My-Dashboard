@@ -53,6 +53,7 @@ export function writeText(name: string, value: string): boolean {
 
 export const STORAGE_KEYS = {
   tileOrder: 'tile-order',
+  tileHidden: 'tile-hidden',
   codeforcesHandle: 'codeforces-handle',
   codeforcesCache: 'codeforces-cache',
   brzBackup: 'brz-backup-snapshot',
@@ -66,4 +67,7 @@ export const STORAGE_KEYS = {
   binanceApiSecret: 'binance-api-secret',
   binanceWatchlist: 'binance-watchlist',
   binanceApiBase: 'binance-api-base',
+  serverMetricsEndpoint: 'server-metrics-endpoint',
+  napcatBaseUrl: 'napcat-base-url',
+  napcatToken: 'napcat-access-token',
 } as const;

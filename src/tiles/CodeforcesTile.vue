@@ -111,7 +111,7 @@ onMounted(() => {
 
     <p v-if="!store.isConfigured" class="cf-hint">
       还没有设置 handle。
-      <button type="button" class="text-link" @click="ui.openSettings()">[去设置里填写]</button>
+      <button type="button" class="text-link" @click="ui.openTileSettings('codeforces')">[去设置里填写]</button>
     </p>
 
     <p v-if="store.error" class="cf-error">{{ store.error }}</p>
@@ -119,7 +119,7 @@ onMounted(() => {
     <template #footer>
       <span>{{ syncLabel }}</span>
       <span class="cf-actions">
-        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+        <button type="button" class="text-link" @click="ui.openTileSettings('codeforces')">[CONFIG]</button>
         <button
           type="button"
           class="text-link text-link--cyan"

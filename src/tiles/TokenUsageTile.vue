@@ -131,7 +131,7 @@ onMounted(() => {
         SYNCED: {{ generatedLabel }} · KEY: {{ store.hasApiKey ? 'SET' : 'UNSET' }}
       </span>
       <span class="usage-actions">
-        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+        <button type="button" class="text-link" @click="ui.openTileSettings('usage')">[CONFIG]</button>
         <button
           type="button"
           class="text-link text-link--purple"

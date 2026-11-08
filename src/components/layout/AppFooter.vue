@@ -32,7 +32,7 @@ const cfLabel = computed(() => {
       TIP: 拖动磁贴标题左侧的 <strong>[::]</strong> 手柄可调整顺序，布局保存在本机浏览器。
     </div>
     <div class="app-footer__stats">
-      <span>TILES: {{ TILE_IDS.length }}</span>
+      <span>TILES: {{ layout.visibleIds.length }}/{{ TILE_IDS.length }}</span>
       <span>LAYOUT: {{ layout.isCustomised ? 'CUSTOM' : 'DEFAULT' }}</span>
       <span>USAGE_SYNC: {{ usageSyncLabel }}</span>
       <span>CF: {{ cfLabel }}</span>

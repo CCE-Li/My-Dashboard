@@ -121,7 +121,7 @@ onMounted(() => {
       <p class="brz-empty__detail">
         {{ store.unavailable ?? '正在读取同源 IndexedDB…' }}
       </p>
-      <button type="button" class="text-link" @click="ui.openSettings()">
+      <button type="button" class="text-link" @click="ui.openTileSettings('brz')">
         [去设置里导入备份]
       </button>
     </div>
@@ -130,7 +130,7 @@ onMounted(() => {
       <span>{{ sourceLabel }}</span>
       <span class="brz-actions">
         <a class="text-link" :href="appUrl" title="打开 BRZ-Fund 管理账本">[BRZ-FUND ↗]</a>
-        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+        <button type="button" class="text-link" @click="ui.openTileSettings('brz')">[CONFIG]</button>
         <button type="button" class="text-link" :disabled="store.isBusy" @click="refresh">
           {{ store.isBusy ? '[READING...]' : '[SYNC]' }}
         </button>

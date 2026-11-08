@@ -33,7 +33,8 @@ npm run format         # prettier
 ```
 My-Dashboard/
 ├── scripts/
-│   └── sync-commandcode-usage.mjs   # 用量采集器（独立 Node 脚本，无依赖）
+│   ├── sync-commandcode-usage.mjs   # 用量采集器（独立 Node 脚本，无依赖）
+│   └── server-metrics-agent.mjs     # 服务器只读指标端点（独立 Node 脚本，无依赖）
 ├── public/data/
 │   └── command-code-usage.json      # 采集产物，提交进仓库供线上使用
 ├── legacy/
@@ -77,7 +78,15 @@ My-Dashboard/
    { id: 'mytile', span: 'single', label: '我的磁贴', component: MyTile },
    ```
 
-无需改动其它文件：布局顺序、拖拽、持久化、重置、页脚统计都由注册表驱动。
+3. 如果它有配置项，再写一个 `src/tiles/settings/` 下的设置组件，挂到该条的
+   `settings` 字段；点磁贴上的 `[CONFIG]` 会打开**这块磁贴自己的**设置弹窗：
+
+   ```ts
+   { id: 'mytile', span: 'single', label: '我的磁贴', component: MyTile, settings: MyTileSettings },
+   ```
+
+无需改动其它文件：布局顺序、拖拽、持久化、重置、页脚统计、各自的设置弹窗
+都由注册表驱动。`TileId` 也从 `TILES` 推导，不必手工维护 id 清单。
 删除某条后，用户既有的布局会自动跳过它（见 `useLayoutStore` 的 `reconcile`）。
 
 > id 是布局持久化的键，**发布后不要改名**，否则用户的拖拽顺序会重置。
@@ -202,6 +211,12 @@ BRZ-Fund 的数据存在 IndexedDB（库名 `brz-fund`），而 IndexedDB 是**�
   被拖磁贴以虚线空洞标出落点，松手后整体平滑归位。顺序存在本机 localStorage，
   顶栏 `[RESET_LAYOUT]` 可恢复默认。动画的几何计算在 `src/domain/tileLayout.ts`
   （纯函数，有单测锁住"预览位移 == 最终落点位移"这个约束）。
+- **磁贴显隐**：设置面板的「磁贴 / TILES」可逐个勾选显示或隐藏某块磁贴。
+  隐藏的磁贴不渲染，但顺序与配置都保留，重新勾选即回到原位置；
+  `[RESET_LAYOUT]` 会同时恢复默认顺序与全部磁贴。页脚 `TILES:` 显示`可见 / 总数`。
+- **每块磁贴有自己的设置**：点磁贴上的 `[CONFIG]` 打开只属于它的设置弹窗
+  （内容由注册表的 `settings` 字段声明）；顶栏 `[SETTINGS]` 只管应用级
+  主题 / 磁贴显隐 / 布局。
 - **滚轮调节用量跨度**：鼠标在 `API_TOKEN_MONITOR` 的条形图上滚动即可切换
   24H / 48H / 7D / 14D / 30D。小时档位读 `byHour`（采集器只保留 48 小时），
   天档位读 `byDay`；跨度选择会记住。档位定义在 `src/config/usageSpans.ts`。
@@ -291,6 +306,63 @@ localStorage，并由浏览器用 Web Crypto 做 HMAC-SHA256 签名：
 - 分子是滚动的：5h / 24h 窗口取自采集器的 `byHour` 桶（覆盖最近 48 小时）。
 - 没填配额时进度条显示「未设配额」而**不是画一条假进度** —— 这是刻意的，
   免得让人误以为系统知道你的额度。
+
+## 服务器状态磁贴（SERVER_STATUS）
+
+展示一台服务器的 CPU / 内存 / 主磁盘占用（占用率 ≥80% 转黄、≥90% 转粉）、
+1/5/15 分钟负载与运行时长。
+
+数据来自一个**只读 JSON 指标端点**，地址填在磁贴的 `[CONFIG] → 服务器 / SERVER`。
+端点需返回如下结构（字段都可缺省，缺省按 0/空处理）。注意配上采集脚本的路径
+（`/metrics`），只填到端口会 404：
+
+```json
+{
+  "hostname": "cceli",
+  "platform": "Linux 6.1.0",
+  "uptimeSec": 90061,
+  "loadAvg": [0.5, 0.4, 0.3],
+  "cpu": { "usagePercent": 12.5, "cores": 4 },
+  "memory": { "totalBytes": 8589934592, "usedBytes": 4294967296 },
+  "disks": [{ "mount": "/", "totalBytes": 107374182400, "usedBytes": 53687091200 }],
+  "generatedAt": "2026-11-08T10:00:00.000Z"
+}
+```
+
+仓库自带一个零依赖采集端，在服务器上跑它即可（只读、无写操作）：
+
+```bash
+node scripts/server-metrics-agent.mjs --port 8787 --host 0.0.0.0
+# → http://<host>:8787/metrics
+```
+
+> ⚠️ 两个硬约束（NapCat 磁贴同样适用）：
+> 1. **跨域**：浏览器直连要求端点带 `Access-Control-Allow-Origin`（脚本已带）。
+> 2. **混合内容**：仪表盘是 https（GitHub Pages），浏览器会**拒绝**请求 http 端点。
+>    线上使用要么给端点套一层 https 反代（Nginx / Caddy / Cloudflare），
+>    要么把仪表盘部署在服务器本地（http 同源）。
+>
+> 端点虽为只读，也别裸奔公网：用防火墙限制来源 IP，或仅本机/内网访问。
+
+## NapCat / Bot 磁贴（NAPCAT_BOT）
+
+展示 QQ bot（NapCat）的昵称与 QQ 号、在线健康度、好友数、群数，以及
+NapCat 与 OneBot 版本。
+
+数据来自 NapCat 的 **OneBot 11 HTTP 服务**，地址与 access token 填在
+`[CONFIG] → NAPCAT / BOT`（默认 `http://127.0.0.1:3000`）。只读调用：
+
+| 端点 | 用途 |
+|---|---|
+| `/get_status` | 在线 / 是否正常（决定角标 ONLINE / DEGRADED / OFFLINE） |
+| `/get_version_info` | NapCat 版本与 OneBot 协议版本 |
+| `/get_login_info` | 登录 QQ 号与昵称 |
+| `/get_friend_list` · `/get_group_list` | 好友数 / 群数 |
+
+- 鉴权用 `Authorization: Bearer <token>`；token 只存本机 localStorage，界面只显示打码值。
+- `get_status` 是必需项；其余端点若因 token 权限被拒，只让对应字段退化，不影响在线状态。
+- 与服务器磁贴一样的跨域 / 混合内容约束：NapCat 的 HTTP 服务需允许跨域，
+  且 https 页面不能直连 http 地址。
 
 ## 部署
 

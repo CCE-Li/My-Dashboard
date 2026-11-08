@@ -40,6 +40,11 @@ export const APP_CONFIG = {
     baseUrl: 'https://api.commandcode.ai/provider/v1',
   },
 
+  napcat: {
+    /** NapCat 的 OneBot HTTP 服务默认地址；用户可在设置里改成自建反代 */
+    defaultBaseUrl: 'http://127.0.0.1:3000',
+  },
+
   brzFund: {
     /** 必须与 BRZ-Fund/src/db/schema.ts 的 DB_NAME 一致 */
     dbName: 'brz-fund',

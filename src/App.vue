@@ -5,6 +5,7 @@ import NoiseBackdrop from '@/components/layout/NoiseBackdrop.vue';
 import SettingsDialog from '@/components/layout/SettingsDialog.vue';
 import StatusHeader from '@/components/layout/StatusHeader.vue';
 import TileGrid from '@/components/layout/TileGrid.vue';
+import TileSettingsDialog from '@/components/layout/TileSettingsDialog.vue';
 import ToastHost from '@/components/layout/ToastHost.vue';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useUiStore } from '@/stores/useUiStore';
@@ -24,5 +25,6 @@ const noiseActive = computed(() => themeStore.themeId === 'simplex');
     <AppFooter />
   </div>
   <SettingsDialog :open="ui.settingsOpen" @close="ui.closeSettings()" />
+  <TileSettingsDialog />
   <ToastHost />
 </template>

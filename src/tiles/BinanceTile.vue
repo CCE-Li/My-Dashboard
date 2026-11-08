@@ -156,7 +156,7 @@ onMounted(() => {
 
     <p v-else-if="store.positionsError" class="bn-hint bn-hint--warn">
       {{ store.positionsError }}
-      <button type="button" class="text-link" @click="ui.openSettings()">[去设置]</button>
+      <button type="button" class="text-link" @click="ui.openTileSettings('binance')">[去设置]</button>
     </p>
 
     <p v-else-if="store.state === 'ready'" class="bn-hint">当前没有持仓。</p>
@@ -208,7 +208,7 @@ onMounted(() => {
         </template>
       </span>
       <span class="bn-actions">
-        <button type="button" class="text-link" @click="ui.openSettings()">[CONFIG]</button>
+        <button type="button" class="text-link" @click="ui.openTileSettings('binance')">[CONFIG]</button>
         <button type="button" class="text-link" :disabled="store.isBusy" @click="sync">
           {{ store.isBusy ? '[SYNCING...]' : '[SYNC]' }}
         </button>

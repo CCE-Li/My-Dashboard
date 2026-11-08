@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import TileFrame from '@/components/ui/TileFrame.vue';
 import { buildSearchUrl } from '@/config/searchPlatforms';
 import { useSearchStore } from '@/stores/useSearchStore';
@@ -22,8 +22,18 @@ const search = useSearchStore();
 const ui = useUiStore();
 const platform = computed(() => search.platform);
 
+/** 输入框内容：空关键词提交时改跳官网，而不是空的搜索结果页 */
+const query = ref('');
+
 function tagUrl(keyword: string): string {
   return buildSearchUrl(platform.value, keyword);
+}
+
+/** 空关键词 → 平台官网主界面；有关键词则交给原生表单提交到结果页 */
+function onSubmit(event: SubmitEvent): void {
+  if (query.value.trim()) return;
+  event.preventDefault();
+  globalThis.open(platform.value.homeUrl, '_blank', 'noopener');
 }
 </script>
 
@@ -40,7 +50,7 @@ function tagUrl(keyword: string): string {
     <div class="platform-bar">
       <span class="platform-bar__label">PLATFORM:</span>
       <span class="platform-bar__current">{{ platform.label }}</span>
-      <button type="button" class="platform-bar__link" @click="ui.openSettings()">
+      <button type="button" class="platform-bar__link" @click="ui.openTileSettings('search')">
         [CHANGE]
       </button>
     </div>
@@ -50,13 +60,20 @@ function tagUrl(keyword: string): string {
       method="get"
       target="_blank"
       rel="noopener"
+      autocomplete="off"
       class="search-form"
+      @submit="onSubmit"
     >
       <input
+        v-model="query"
         type="text"
         :name="platform.queryParam"
         :placeholder="`SEARCH ON ${platform.label}...`"
         autofocus
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
         class="sharp-input search-form__input"
         :aria-label="`${platform.label} 搜索关键词`"
       />
