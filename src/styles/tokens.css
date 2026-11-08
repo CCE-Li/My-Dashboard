@@ -65,6 +65,11 @@
   --glass-bg: color-mix(in srgb, var(--bg-surface) var(--glass-pct), transparent);
   --glass-border: color-mix(in srgb, var(--border-strong) 75%, transparent);
   --glass-blur: 12px;
+  /* 背面增艳：玻璃透过去的东西更"活" */
+  --glass-saturate: 150%;
+  /* 顶部斜射高光 + 内侧亮边：让玻璃像一块有厚度的板，而不是一块半透明色块 */
+  --glass-sheen: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  --glass-highlight: color-mix(in srgb, var(--text-primary) 12%, transparent);
 
   /* 鼠标「红绿灯」：经过时把背景图里的白色路网填红。
      mask 用同一张图做亮度遮罩 —— 亮像素（路网）显色，黑底透明 */
